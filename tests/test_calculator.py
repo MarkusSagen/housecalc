@@ -277,3 +277,25 @@ def test_wait_higher_kontantinsats_means_smaller_loan():
     # After buying, the 20% version should have a smaller remaining loan
     # at year 2 (first year after the 12-month wait).
     assert r20.yearly[2].remaining_loan_kr < r10.yearly[2].remaining_loan_kr
+
+
+from app.calculator import compare_scenarios
+from app.models import ComparisonResult
+
+
+def test_compare_scenarios_returns_both():
+    result = compare_scenarios(_request())
+    assert isinstance(result, ComparisonResult)
+    assert result.buy_now.yearly[0].year == 0
+    assert result.wait_and_invest.yearly[0].year == 0
+
+
+def test_compare_scenarios_summary_picks_winner():
+    result = compare_scenarios(_request())
+    buy_final = result.buy_now.yearly[-1].net_worth_kr
+    wait_final = result.wait_and_invest.yearly[-1].net_worth_kr
+    assert result.summary.buy_now_net_worth_kr == buy_final
+    assert result.summary.wait_invest_net_worth_kr == wait_final
+    assert result.summary.difference_kr == abs(buy_final - wait_final)
+    expected_winner = "buy_now" if buy_final >= wait_final else "wait_and_invest"
+    assert result.summary.better_scenario == expected_winner

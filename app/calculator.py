@@ -1,6 +1,14 @@
 """Pure calculation functions for Swedish home purchase scenarios."""
 
-from app.models import OneTimeCosts, MonthlyCosts, CalculateRequest, ScenarioResult, YearSnapshot
+from app.models import (
+    OneTimeCosts,
+    MonthlyCosts,
+    CalculateRequest,
+    ScenarioResult,
+    YearSnapshot,
+    ComparisonResult,
+    ComparisonSummary,
+)
 
 LAGFART_FEE_KR = 825
 PANTBREV_FEE_KR = 375
@@ -261,3 +269,16 @@ def wait_and_invest_scenario(req: CalculateRequest) -> ScenarioResult:
         monthly_at_start_after_tax=monthly_at_start_after_tax,
         yearly=yearly,
     )
+
+def compare_scenarios(req: CalculateRequest) -> ComparisonResult:
+    buy_now = buy_now_scenario(req)
+    wait = wait_and_invest_scenario(req)
+    buy_final = buy_now.yearly[-1].net_worth_kr
+    wait_final = wait.yearly[-1].net_worth_kr
+    summary = ComparisonSummary(
+        buy_now_net_worth_kr=buy_final,
+        wait_invest_net_worth_kr=wait_final,
+        difference_kr=abs(buy_final - wait_final),
+        better_scenario="buy_now" if buy_final >= wait_final else "wait_and_invest",
+    )
+    return ComparisonResult(buy_now=buy_now, wait_and_invest=wait, summary=summary)
