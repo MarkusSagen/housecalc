@@ -1,5 +1,21 @@
-from app.calculator import compute_one_time_costs
-from app.models import OneTimeCosts
+import pytest
+
+from app.calculator import (
+    buy_now_scenario,
+    compare_scenarios,
+    compute_monthly_costs,
+    compute_one_time_costs,
+    ranteavdrag_credit_kr,
+    wait_and_invest_scenario,
+)
+from app.models import (
+    CalculateRequest,
+    ComparisonResult,
+    HandpenningSource,
+    HousingType,
+    OneTimeCosts,
+    ScenarioResult,
+)
 
 
 def test_one_time_costs_typical_brf():
@@ -40,9 +56,6 @@ def test_one_time_costs_all_cash_purchase():
     assert result.pantbrev_kr == 0
     assert result.kontantinsats_kr == 3_000_000
     assert result.stamp_duty_kr == 45_000
-
-
-from app.calculator import compute_monthly_costs, ranteavdrag_credit_kr
 
 
 def test_monthly_costs_basic():
@@ -95,10 +108,6 @@ def test_ranteavdrag_zero():
     assert ranteavdrag_credit_kr(0) == 0
 
 
-from app.calculator import buy_now_scenario
-from app.models import CalculateRequest, HandpenningSource, HousingType, ScenarioResult
-
-
 def _request(**overrides) -> CalculateRequest:
     defaults = dict(
         price_kr=3_000_000,
@@ -140,7 +149,10 @@ def test_buy_now_loan_decreases_each_year():
     loans = [y.remaining_loan_kr for y in result.yearly]
     assert loans == sorted(loans, reverse=True)
     # 3.5% of 2.6M = 91,000 per year amortization
-    assert result.yearly[0].remaining_loan_kr - result.yearly[1].remaining_loan_kr == 91_000
+    assert (
+        result.yearly[0].remaining_loan_kr - result.yearly[1].remaining_loan_kr
+        == 91_000
+    )
 
 
 def test_buy_now_house_appreciates():
@@ -166,19 +178,13 @@ def test_buy_now_monthly_at_start():
 
 def test_buy_now_after_tax_monthly_lower_than_pretax():
     result = buy_now_scenario(_request())
-    assert (
-        result.monthly_at_start_after_tax.total_kr
-        < result.monthly_at_start.total_kr
-    )
+    assert result.monthly_at_start_after_tax.total_kr < result.monthly_at_start.total_kr
 
 
 def test_buy_now_amortization_stops_at_zero():
     # With 3.5% flat amort, ~28.6 years to pay off. Test 30-year horizon.
     result = buy_now_scenario(_request(horizon_years=30))
     assert result.yearly[-1].remaining_loan_kr == 0
-
-
-from app.calculator import wait_and_invest_scenario
 
 
 def test_wait_year_zero_snapshot():
@@ -250,7 +256,6 @@ def test_wait_fails_if_stocks_cant_cover_handpenning():
         stock_return_pct=0.0,
         house_appreciation_pct=20.0,
     )
-    import pytest
     with pytest.raises(ValueError, match="cover"):
         wait_and_invest_scenario(req)
 
@@ -277,10 +282,6 @@ def test_wait_higher_kontantinsats_means_smaller_loan():
     # After buying, the 20% version should have a smaller remaining loan
     # at year 2 (first year after the 12-month wait).
     assert r20.yearly[2].remaining_loan_kr < r10.yearly[2].remaining_loan_kr
-
-
-from app.calculator import compare_scenarios
-from app.models import ComparisonResult
 
 
 def test_compare_scenarios_returns_both():

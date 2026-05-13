@@ -1,13 +1,13 @@
 """Pure calculation functions for Swedish home purchase scenarios."""
 
 from app.models import (
-    OneTimeCosts,
-    MonthlyCosts,
     CalculateRequest,
-    ScenarioResult,
-    YearSnapshot,
     ComparisonResult,
     ComparisonSummary,
+    MonthlyCosts,
+    OneTimeCosts,
+    ScenarioResult,
+    YearSnapshot,
 )
 
 LAGFART_FEE_KR = 825
@@ -27,9 +27,7 @@ def compute_one_time_costs(
     stamp_duty = round(STAMP_DUTY_RATE * price_kr)
     new_pantbrev = max(0, loan_kr - existing_pantbrev_kr)
     pantbrev_cost = (
-        round(PANTBREV_RATE * new_pantbrev) + PANTBREV_FEE_KR
-        if new_pantbrev > 0
-        else 0
+        round(PANTBREV_RATE * new_pantbrev) + PANTBREV_FEE_KR if new_pantbrev > 0 else 0
     )
     lagfart_fee = LAGFART_FEE_KR if loan_kr > 0 or price_kr > 0 else 0
     total = kontantinsats + stamp_duty + pantbrev_cost + lagfart_fee
@@ -269,6 +267,7 @@ def wait_and_invest_scenario(req: CalculateRequest) -> ScenarioResult:
         monthly_at_start_after_tax=monthly_at_start_after_tax,
         yearly=yearly,
     )
+
 
 def compare_scenarios(req: CalculateRequest) -> ComparisonResult:
     buy_now = buy_now_scenario(req)

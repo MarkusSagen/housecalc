@@ -17,7 +17,7 @@ def calculate(req: CalculateRequest) -> ComparisonResult:
     try:
         return compare_scenarios(req)
     except ValueError as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(status_code=422, detail=str(e)) from e
 
 
 if STATIC_DIR.exists():
