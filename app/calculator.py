@@ -1,6 +1,6 @@
 """Pure calculation functions for Swedish home purchase scenarios."""
 
-from app.models import OneTimeCosts
+from app.models import OneTimeCosts, MonthlyCosts
 
 LAGFART_FEE_KR = 825
 PANTBREV_FEE_KR = 375
@@ -32,3 +32,30 @@ def compute_one_time_costs(
         lagfart_fee_kr=lagfart_fee,
         total_kr=total,
     )
+
+
+def compute_monthly_costs(
+    remaining_loan_kr: int,
+    initial_loan_kr: int,
+    monthly_fee_kr: int,
+    interest_rate_pct: float,
+    amortization_rate_pct: float,
+) -> MonthlyCosts:
+    interest = round(remaining_loan_kr * (interest_rate_pct / 100) / 12)
+    amortization = round(initial_loan_kr * (amortization_rate_pct / 100) / 12)
+    fee = monthly_fee_kr
+    return MonthlyCosts(
+        interest_kr=interest,
+        amortization_kr=amortization,
+        fee_kr=fee,
+        total_kr=interest + amortization + fee,
+    )
+
+
+def ranteavdrag_credit_kr(annual_interest_kr: int) -> int:
+    """Swedish interest tax deduction: 30% on first 100k kr, 21% on the rest."""
+    if annual_interest_kr <= RANTEAVDRAG_CAP_KR:
+        return round(annual_interest_kr * RANTEAVDRAG_RATE_BELOW)
+    below = round(RANTEAVDRAG_CAP_KR * RANTEAVDRAG_RATE_BELOW)
+    above = round((annual_interest_kr - RANTEAVDRAG_CAP_KR) * RANTEAVDRAG_RATE_ABOVE)
+    return below + above

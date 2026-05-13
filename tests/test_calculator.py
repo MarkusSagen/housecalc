@@ -40,3 +40,56 @@ def test_one_time_costs_all_cash_purchase():
     assert result.pantbrev_kr == 0
     assert result.kontantinsats_kr == 3_000_000
     assert result.stamp_duty_kr == 45_000
+
+
+from app.calculator import compute_monthly_costs, ranteavdrag_credit_kr
+
+
+def test_monthly_costs_basic():
+    # 2.6M loan, 3.95% interest, 3.5% amortization on initial loan, 4500 fee
+    result = compute_monthly_costs(
+        remaining_loan_kr=2_600_000,
+        initial_loan_kr=2_600_000,
+        monthly_fee_kr=4_500,
+        interest_rate_pct=3.95,
+        amortization_rate_pct=3.5,
+    )
+    assert result.interest_kr == round(2_600_000 * 0.0395 / 12)  # 8558
+    assert result.amortization_kr == round(2_600_000 * 0.035 / 12)  # 7583
+    assert result.fee_kr == 4_500
+    assert result.total_kr == result.interest_kr + result.amortization_kr + 4_500
+
+
+def test_monthly_costs_amortization_fixed_on_initial_loan():
+    # Amortization stays flat even as remaining loan decreases
+    result = compute_monthly_costs(
+        remaining_loan_kr=1_300_000,  # half paid off
+        initial_loan_kr=2_600_000,
+        monthly_fee_kr=4_500,
+        interest_rate_pct=3.95,
+        amortization_rate_pct=3.5,
+    )
+    # Interest based on remaining
+    assert result.interest_kr == round(1_300_000 * 0.0395 / 12)
+    # Amortization still based on initial
+    assert result.amortization_kr == round(2_600_000 * 0.035 / 12)
+
+
+def test_ranteavdrag_below_cap():
+    # 50,000 kr interest -> 30% = 15,000 kr credit
+    assert ranteavdrag_credit_kr(50_000) == 15_000
+
+
+def test_ranteavdrag_at_cap():
+    # Exactly 100,000 kr -> 30,000 kr credit
+    assert ranteavdrag_credit_kr(100_000) == 30_000
+
+
+def test_ranteavdrag_above_cap():
+    # 150,000 kr interest: 30% on first 100k + 21% on next 50k
+    # = 30,000 + 10,500 = 40,500
+    assert ranteavdrag_credit_kr(150_000) == 40_500
+
+
+def test_ranteavdrag_zero():
+    assert ranteavdrag_credit_kr(0) == 0
