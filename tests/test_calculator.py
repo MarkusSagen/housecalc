@@ -176,3 +176,104 @@ def test_buy_now_amortization_stops_at_zero():
     # With 3.5% flat amort, ~28.6 years to pay off. Test 30-year horizon.
     result = buy_now_scenario(_request(horizon_years=30))
     assert result.yearly[-1].remaining_loan_kr == 0
+
+
+from app.calculator import wait_and_invest_scenario
+
+
+def test_wait_year_zero_snapshot():
+    req = _request(
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=400_000)],
+        wait_months=12,
+    )
+    result = wait_and_invest_scenario(req)
+    y0 = result.yearly[0]
+    assert y0.year == 0
+    assert y0.remaining_loan_kr == 0
+    assert y0.house_value_kr == 3_000_000
+    assert y0.stocks_kr == 400_000
+    assert y0.home_equity_kr == 0
+
+
+def test_wait_horizon_length():
+    result = wait_and_invest_scenario(_request(horizon_years=10))
+    assert len(result.yearly) == 11  # year 0..10
+
+
+def test_wait_stocks_grow_during_wait():
+    # No monthly savings, just compound growth
+    req = _request(
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=400_000)],
+        wait_months=12,
+        monthly_savings_kr=0,
+        stock_return_pct=12.0,  # easy math: 1% monthly
+    )
+    result = wait_and_invest_scenario(req)
+    # After 12 months at 1%/mo: 400k * 1.01^12 ~= 450,729
+    y1 = result.yearly[1]
+    assert 449_000 < y1.stocks_kr < 452_000
+
+
+def test_wait_house_appreciates_during_wait():
+    req = _request(wait_months=12, house_appreciation_pct=12.0)  # 1%/mo
+    result = wait_and_invest_scenario(req)
+    # After 12 months: 3M * 1.01^12 ~= 3,380,000
+    y1 = result.yearly[1]
+    assert 3_375_000 < y1.house_value_kr < 3_385_000
+
+
+def test_wait_buys_house_after_wait_period():
+    req = _request(
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=400_000)],
+        monthly_savings_kr=10_000,
+        wait_months=12,
+        stock_return_pct=7.0,
+        house_appreciation_pct=3.0,
+        horizon_years=10,
+    )
+    result = wait_and_invest_scenario(req)
+    # By year 2 we own the house, so equity > 0
+    y2 = result.yearly[2]
+    assert y2.remaining_loan_kr > 0
+    assert y2.home_equity_kr > 0
+
+
+def test_wait_fails_if_stocks_cant_cover_handpenning():
+    # 300k handpenning (exactly 10%), no monthly savings, 0% stock return,
+    # house appreciates so much that required handpenning at end of wait
+    # exceeds the stocks.
+    req = _request(
+        price_kr=3_000_000,
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=300_000)],
+        monthly_savings_kr=0,
+        wait_months=12,
+        stock_return_pct=0.0,
+        house_appreciation_pct=20.0,
+    )
+    import pytest
+    with pytest.raises(ValueError, match="cover"):
+        wait_and_invest_scenario(req)
+
+
+def test_wait_zero_months_matches_buy_now_year_zero():
+    req = _request(wait_months=0)
+    wait_result = wait_and_invest_scenario(req)
+    buy_result = buy_now_scenario(req)
+    # Year 0 of buy_now matches year 0 of wait (house value the same).
+    assert wait_result.yearly[0].house_value_kr == buy_result.yearly[0].house_value_kr
+
+
+def test_wait_higher_kontantinsats_means_smaller_loan():
+    # Compare 10% vs 15% kontantinsats at end of wait.
+    base = dict(
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=600_000)],
+        wait_months=12,
+        monthly_savings_kr=0,
+        stock_return_pct=7.0,
+        house_appreciation_pct=3.0,
+    )
+    r10 = wait_and_invest_scenario(_request(**base, wait_kontantinsats_pct=10.0))
+    r20 = wait_and_invest_scenario(_request(**base, wait_kontantinsats_pct=20.0))
+    # After buying, the 20% version should have a smaller remaining loan
+    # at year 2 (first year after the 12-month wait).
+    assert r20.yearly[2].remaining_loan_kr < r10.yearly[2].remaining_loan_kr
