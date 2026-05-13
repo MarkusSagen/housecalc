@@ -49,7 +49,7 @@ Defaults are pre-filled in the form; user may adjust any of them.
 | Rule | Value | Source |
 |------|-------|--------|
 | LTV cap (bolånetak) | 90% (i.e. ≥10% kontantinsats) | Updated Finansinspektionen rule |
-| Amortization rate (flat) | 3.5% of original loan/year | Per user, simplification of FI rules |
+| Amortization rate (flat) | 2% of original loan/year | Booli/SBAB default for LTV > 70% |
 | Stämpelskatt (lagfart) | 1.5% of purchase price | Lantmäteriet |
 | Pantbrev stamp duty | 2% of new pantbrev amount + 375 kr | Lantmäteriet |
 | Lagfart fee | 825 kr | Lantmäteriet |
@@ -71,10 +71,11 @@ Defaults are pre-filled in the form; user may adjust any of them.
 - `amount_kr` (int).
 
 **Loan**
-- `interest_rate_pct` (float, default 3.95).
-- `amortization_rate_pct` (float, default 3.5).
+- `interest_rate_pct` (float, default 3.0). Booli default.
+- `amortization_rate_pct` (float, default 2.0). Booli default; matches FI tier
+  for LTV > 70%.
 - `loan_term_years` (int, default 50). Used only as a sanity bound; with
-  flat 3.5% the loan is paid off in ~28.6 years.
+  flat 2% the loan is paid off in 50 years exactly.
 
 **Wait-and-invest**
 - `wait_months` (int, default 12).
@@ -82,6 +83,10 @@ Defaults are pre-filled in the form; user may adjust any of them.
   wait only*. After buying, no further monthly investing is modeled in v1.
 - `stock_return_pct` (float, default 7).
 - `house_appreciation_pct` (float, default 3).
+- `wait_kontantinsats_pct` (float, default 10.0, min 10.0) — % of the new
+  (appreciated) price to put down as kontantinsats at the future purchase.
+  Lets the user model "same loan ratio" (10%) vs. "larger down payment"
+  (e.g. 20%) using the same input form. Any leftover stocks stay invested.
 
 **Comparison**
 - `horizon_years` (enum: 5 | 10 | 20 | 30, default 10).
@@ -124,7 +129,7 @@ horizon-end delta.
    - stämpelskatt = 1.5% × price
    - pantbrev = 2% × max(0, loan − existing_pantbrev) + 375 kr
    - lagfart fee = 825 kr
-4. **Monthly amortization** (fixed) = (3.5% × initial loan) / 12.
+4. **Monthly amortization** (fixed) = (amortization_rate × initial loan) / 12.
 5. **Monthly interest (year n)** = (remaining loan at year n) × interest / 12.
 6. **Year loop** (0 to horizon):
    - Pay 12 months of amortization → reduce loan.
@@ -147,11 +152,9 @@ horizon-end delta.
    - Each month: stocks grow by monthly stock return AND user adds
      `monthly_savings_kr`.
    - House price grows by `house_appreciation_pct` over the wait.
-2. **Buy at end of wait:** new price, new handpenning (= grown stocks, but
-   capped at whatever the user wants to put in; v1 puts in the same percentage
-   of new price as original, leftover stays in stocks).
-   - Decision: v1 keeps **10% of new price as handpenning** if stocks can
-     cover, else fail and explain.
+2. **Buy at end of wait:** new price, new handpenning = `wait_kontantinsats_pct`
+   × new price (default 10%, user can raise it). Leftover stocks stay invested.
+   - If stocks < required handpenning + closing costs, raise a clear error.
 3. From there, run the same year loop as Scenario A but starting at
    year = `wait_months / 12` and ending at horizon. Stocks continue to grow
    on whatever wasn't used for handpenning + one-time costs.
@@ -170,10 +173,11 @@ Shown as a separate line on monthly costs (`monthly_at_start_after_tax`).
 stacked on mobile.
 
 **Form sections** (collapsible after first fill):
-1. Bostad (price, type, fee)
-2. Handpenning (add/remove rows; live total + % of price; warn if < 10%)
+1. Bostad (price, type, fee, existing pantbrev)
+2. Handpenning (add/remove rows; live total kr / % of price / LTV%; warn if < 10%)
 3. Lån (interest, amortization, term)
-4. Vänta och investera (wait months, monthly savings, returns)
+4. Vänta och investera (wait months, monthly savings, stock return, house
+   appreciation, wait_kontantinsats_pct)
 5. Jämförelse (horizon, household income)
 
 **Results panel:**

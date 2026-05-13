@@ -129,8 +129,9 @@ def _valid_request_kwargs():
 def test_valid_request_accepted():
     req = CalculateRequest(**_valid_request_kwargs())
     assert req.price_kr == 3_000_000
-    assert req.interest_rate_pct == 3.95  # default
-    assert req.amortization_rate_pct == 3.5
+    assert req.interest_rate_pct == 3.0  # default (Booli)
+    assert req.amortization_rate_pct == 2.0  # default (Booli, FI tier >70% LTV)
+    assert req.wait_kontantinsats_pct == 10.0  # default
     assert req.horizon_years == 10
 
 
@@ -197,8 +198,8 @@ class CalculateRequest(BaseModel):
     handpenning_sources: list[HandpenningSource] = Field(min_length=1)
 
     # Loan
-    interest_rate_pct: float = Field(ge=0, default=3.95)
-    amortization_rate_pct: float = Field(ge=0, default=3.5)
+    interest_rate_pct: float = Field(ge=0, default=3.0)
+    amortization_rate_pct: float = Field(ge=0, default=2.0)
     loan_term_years: int = Field(gt=0, default=50)
 
     # Wait scenario
@@ -206,6 +207,7 @@ class CalculateRequest(BaseModel):
     monthly_savings_kr: int = Field(ge=0, default=0)
     stock_return_pct: float = Field(default=7.0)
     house_appreciation_pct: float = Field(default=3.0)
+    wait_kontantinsats_pct: float = Field(ge=10.0, le=100.0, default=10.0)
 
     # Comparison
     horizon_years: int = Field(gt=0, default=10)
@@ -878,12 +880,12 @@ def wait_and_invest_scenario(req: CalculateRequest) -> ScenarioResult:
 
     # Buy at end of wait
     final_price = round(house_value)
-    required_handpenning = round((1 - LTV_CAP) * final_price)
+    required_handpenning = round(req.wait_kontantinsats_pct / 100 * final_price)
     if stocks < required_handpenning:
         raise ValueError(
             f"After {req.wait_months} months, stocks ({round(stocks)} kr) "
-            f"cannot cover required 10% handpenning ({required_handpenning} kr) "
-            f"on appreciated price of {final_price} kr."
+            f"cannot cover required {req.wait_kontantinsats_pct:.1f}% handpenning "
+            f"({required_handpenning} kr) on appreciated price of {final_price} kr."
         )
 
     handpenning_used = required_handpenning
@@ -1231,10 +1233,10 @@ Create `static/index.html`:
         <fieldset>
           <legend>Lån</legend>
           <label>Ränta (%)
-            <input type="number" step="0.01" name="interest_rate_pct" value="3.95" min="0" required />
+            <input type="number" step="0.01" name="interest_rate_pct" value="3.0" min="0" required />
           </label>
           <label>Amortering (%)
-            <input type="number" step="0.1" name="amortization_rate_pct" value="3.5" min="0" required />
+            <input type="number" step="0.1" name="amortization_rate_pct" value="2.0" min="0" required />
           </label>
           <label>Löptid (år)
             <input type="number" name="loan_term_years" value="50" min="1" required />
@@ -1254,6 +1256,10 @@ Create `static/index.html`:
           </label>
           <label>Förväntad bostadsuppgång (% / år)
             <input type="number" step="0.1" name="house_appreciation_pct" value="3.0" required />
+          </label>
+          <label>Kontantinsats vid framtida köp (%)
+            <input type="number" step="0.5" name="wait_kontantinsats_pct" value="10" min="10" max="100" required />
+            <small style="color:#5b6776">10% = samma lånekvot. Högre = mindre lån men mindre kvar i aktier.</small>
           </label>
         </fieldset>
 
@@ -1573,7 +1579,9 @@ function updateHpStatus() {
   const price = parseInt(form.price_kr.value || "0", 10);
   const min = Math.round(price * 0.1);
   const pct = price > 0 ? ((total / price) * 100).toFixed(1) : "0";
-  hpStatus.textContent = `(${fmt(total)} = ${pct}% av priset, krav ≥ ${fmt(min)})`;
+  const ltv = price > 0 ? (((price - total) / price) * 100).toFixed(1) : "0";
+  hpStatus.textContent =
+    `(${fmt(total)} = ${pct}% av priset, LTV ${ltv}%, krav ≥ ${fmt(min)})`;
   hpStatus.className = total >= min ? "ok" : "bad";
 }
 
