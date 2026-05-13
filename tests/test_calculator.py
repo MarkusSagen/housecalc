@@ -93,3 +93,86 @@ def test_ranteavdrag_above_cap():
 
 def test_ranteavdrag_zero():
     assert ranteavdrag_credit_kr(0) == 0
+
+
+from app.calculator import buy_now_scenario
+from app.models import CalculateRequest, HandpenningSource, HousingType, ScenarioResult
+
+
+def _request(**overrides) -> CalculateRequest:
+    defaults = dict(
+        price_kr=3_000_000,
+        housing_type=HousingType.BRF,
+        monthly_fee_kr=4_500,
+        handpenning_sources=[HandpenningSource(label="Sparpengar", amount_kr=400_000)],
+        interest_rate_pct=4.0,
+        amortization_rate_pct=3.5,
+        wait_months=12,
+        monthly_savings_kr=10_000,
+        stock_return_pct=7.0,
+        house_appreciation_pct=3.0,
+        horizon_years=10,
+        gross_household_income_kr_year=600_000,
+    )
+    defaults.update(overrides)
+    return CalculateRequest(**defaults)
+
+
+def test_buy_now_year_zero_snapshot():
+    result = buy_now_scenario(_request())
+    assert isinstance(result, ScenarioResult)
+    y0 = result.yearly[0]
+    assert y0.year == 0
+    assert y0.remaining_loan_kr == 2_600_000
+    assert y0.house_value_kr == 3_000_000
+    assert y0.home_equity_kr == 400_000
+    assert y0.stocks_kr == 0
+    assert y0.net_worth_kr == 400_000
+
+
+def test_buy_now_horizon_length():
+    result = buy_now_scenario(_request(horizon_years=10))
+    assert len(result.yearly) == 11  # year 0..10
+
+
+def test_buy_now_loan_decreases_each_year():
+    result = buy_now_scenario(_request())
+    loans = [y.remaining_loan_kr for y in result.yearly]
+    assert loans == sorted(loans, reverse=True)
+    # 3.5% of 2.6M = 91,000 per year amortization
+    assert result.yearly[0].remaining_loan_kr - result.yearly[1].remaining_loan_kr == 91_000
+
+
+def test_buy_now_house_appreciates():
+    result = buy_now_scenario(_request(house_appreciation_pct=3.0))
+    y1 = result.yearly[1]
+    # 3M * 1.03 = 3,090,000
+    assert y1.house_value_kr == 3_090_000
+
+
+def test_buy_now_equity_grows():
+    result = buy_now_scenario(_request())
+    equities = [y.home_equity_kr for y in result.yearly]
+    assert all(equities[i] < equities[i + 1] for i in range(len(equities) - 1))
+
+
+def test_buy_now_monthly_at_start():
+    result = buy_now_scenario(_request())
+    # 2.6M loan, 4% interest, 3.5% amortization on initial
+    assert result.monthly_at_start.interest_kr == round(2_600_000 * 0.04 / 12)
+    assert result.monthly_at_start.amortization_kr == round(2_600_000 * 0.035 / 12)
+    assert result.monthly_at_start.fee_kr == 4_500
+
+
+def test_buy_now_after_tax_monthly_lower_than_pretax():
+    result = buy_now_scenario(_request())
+    assert (
+        result.monthly_at_start_after_tax.total_kr
+        < result.monthly_at_start.total_kr
+    )
+
+
+def test_buy_now_amortization_stops_at_zero():
+    # With 3.5% flat amort, ~28.6 years to pay off. Test 30-year horizon.
+    result = buy_now_scenario(_request(horizon_years=30))
+    assert result.yearly[-1].remaining_loan_kr == 0
