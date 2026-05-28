@@ -47,6 +47,7 @@ function syncFromPriceOrPct() {
   suppressSync = true;
   hpInput.value = newAmount;
   suppressSync = false;
+  renderLiveSummary();
 }
 
 function syncFromHpAmount() {
@@ -57,6 +58,7 @@ function syncFromHpAmount() {
   suppressSync = true;
   hpSlider.value = Math.min(50, Math.max(0, pct));
   suppressSync = false;
+  renderLiveSummary();
 }
 
 function addHandpenningRow(label = "", amount = "") {
@@ -164,6 +166,9 @@ function renderLiveSummary() {
   $("#hc-onetime-total").textContent = fmt(s.onetimeTotal);
 
   $("#hc-total-cash").textContent = fmt(s.onetimeTotal);
+  $("#hcf-kontant").textContent = fmt(s.hpTotal);
+  $("#hcf-lagfart").textContent = fmt(s.lagfart);
+  $("#hcf-pantbrev").textContent = fmt(s.pantbrev);
   $("#hc-loan").textContent = fmt(s.loan);
   $("#hc-ltv").textContent = `${s.ltv.toFixed(1)}%`;
 

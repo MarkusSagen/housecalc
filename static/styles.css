@@ -121,14 +121,45 @@ small.muted { display: block; margin-top: 0.25rem; font-size: 0.78rem; line-heig
   font-weight: 600;
 }
 .hc-row.hc-total strong { color: #ffcf75; font-size: 1.05rem; }
+.hero-card-cash {
+  background: rgba(255, 207, 117, 0.13);
+  border-color: rgba(255, 207, 117, 0.4);
+}
 .hero-card-cash .hc-cash {
-  font-size: 1.7rem;
+  font-size: 2.1rem;
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   color: #ffcf75;
   margin: 0.1rem 0 0.5rem;
+  line-height: 1.05;
 }
+.hc-formula {
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
+}
+.hcf-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.85rem;
+  padding: 0.12rem 0;
+  gap: 0.75rem;
+}
+.hcf-row span { opacity: 0.8; }
+.hcf-row strong { font-variant-numeric: tabular-nums; color: white; }
+.hc-meta {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  display: flex;
+  gap: 1rem;
+  font-size: 0.82rem;
+}
+.hcm-row { display: flex; align-items: baseline; gap: 0.35rem; }
+.hcm-row span { opacity: 0.75; }
+.hcm-row strong { font-variant-numeric: tabular-nums; color: white; }
 
 /* ============ CONTROLS ============ */
 .controls { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; box-shadow: var(--shadow); }
