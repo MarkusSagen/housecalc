@@ -169,3 +169,66 @@ table tr.total td { font-weight: 600; }
 }
 
 canvas { width: 100% !important; height: 320px !important; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.85rem; }
+small.muted { display: block; margin-top: 0.25rem; font-size: 0.8rem; line-height: 1.4; color: var(--muted); }
+
+.live-summary { background: linear-gradient(180deg, var(--accent-light) 0%, white 60%); border-color: var(--accent); }
+.live-summary h2 { color: var(--accent); margin-top: 0; }
+
+.ls-rows { display: flex; flex-direction: column; gap: 0.1rem; }
+.ls-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 0.2rem 0;
+  font-size: 0.95rem;
+  gap: 1rem;
+}
+.ls-row > span { color: var(--muted); }
+.ls-row strong { font-variant-numeric: tabular-nums; color: var(--text); }
+.ls-row.total { font-weight: 600; padding: 0.4rem 0; }
+.ls-row.total > span { color: var(--text); }
+.ls-row.total strong { color: var(--accent); font-size: 1.1rem; }
+.ls-row.good strong { color: var(--good); }
+.ls-divider { height: 1px; background: var(--border); margin: 0.35rem 0; }
+
+.rate-presets {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+.rate-presets .rate-preset {
+  width: auto;
+  padding: 0.25rem 0.55rem;
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.insights p { margin: 0.4rem 0; font-size: 0.95rem; }
+.insights p strong { font-variant-numeric: tabular-nums; }
+
+.tier-table { width: 100%; margin-top: 0.5rem; font-size: 0.9rem; border-collapse: collapse; }
+.tier-table th {
+  text-align: left;
+  padding: 0.4rem 0.5rem 0.4rem 0;
+  border-bottom: 2px solid var(--border);
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.tier-table td {
+  padding: 0.45rem 0.5rem 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.tier-table td:not(:first-child) { text-align: right; }
+.tier-table th:not(:first-child) { text-align: right; }
+.tier-table tr:last-child td { border-bottom: none; }

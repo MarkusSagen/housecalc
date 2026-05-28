@@ -15,6 +15,39 @@
 
   <main>
     <section class="form-panel">
+      <div class="card live-summary" id="live-summary">
+        <h2>Snabb sammanfattning</h2>
+        <div class="ls-rows">
+          <div class="ls-row"><span>Förväntat slutpris</span><strong id="ls-price">— kr</strong></div>
+          <div class="ls-row"><span>Kontantinsats (<span id="ls-hp-pct">—</span>)</span><strong id="ls-handpenning">— kr</strong></div>
+          <div class="ls-row"><span>Bolån (LTV <span id="ls-ltv">—</span>)</span><strong id="ls-loan">— kr</strong></div>
+          <div class="ls-row"><span>Lagfart (1,5% + 825 kr)</span><strong id="ls-lagfart">— kr</strong></div>
+          <div class="ls-row"><span>Pantbrev (2% + 375 kr)</span><strong id="ls-pantbrev">— kr</strong></div>
+          <div class="ls-divider"></div>
+          <div class="ls-row total"><span>Total kontanter du behöver</span><strong id="ls-total-cash">— kr</strong></div>
+          <div class="ls-divider"></div>
+          <div class="ls-row"><span>Ränta (<span id="ls-rate-pct">—</span>)</span><strong id="ls-monthly-interest">— kr/mån</strong></div>
+          <div class="ls-row"><span>Amortering (<span id="ls-amort-pct">—</span>)</span><strong id="ls-monthly-amort">— kr/mån</strong></div>
+          <div class="ls-row"><span>Avgift / drift</span><strong id="ls-monthly-fee">— kr/mån</strong></div>
+          <div class="ls-divider"></div>
+          <div class="ls-row total"><span>Månadskostnad före skatteavdrag</span><strong id="ls-monthly-total">— kr/mån</strong></div>
+          <div class="ls-row good"><span>Efter ränteavdrag</span><strong id="ls-monthly-aftertax">— kr/mån</strong></div>
+        </div>
+      </div>
+
+      <div class="card insights" id="insights">
+        <h2>Insikter</h2>
+        <p>Om <strong><span id="ins-horizon">10</span> år</strong> har du amorterat <strong id="ins-amort-total">— kr</strong> på lånet.</p>
+        <p id="ins-tier-drop-row" hidden>Amorteringskravet sjunker till 1% om <strong id="ins-tier-drop-years">— år</strong> (när LTV når 70%, utan värdestegring).</p>
+        <table class="tier-table">
+          <thead>
+            <tr><th>Kontantinsats</th><th>LTV</th><th>Amortering/mån</th></tr>
+          </thead>
+          <tbody id="tier-table-body"></tbody>
+        </table>
+        <p class="small muted" style="margin-top:0.5rem">Tabellen visar Finansinspektionens nivåer: &gt;70% LTV = 2%, 50–70% = 1%, ≤50% = 0%. Lägg till mer kontantinsats för att hamna i en lägre nivå.</p>
+      </div>
+
       <form id="calc-form">
         <fieldset>
           <legend>Bostad</legend>
@@ -32,6 +65,7 @@
           </label>
           <label>Befintliga pantbrev (kr)
             <input type="number" name="existing_pantbrev_kr" value="0" min="0" />
+            <small class="muted">Du kan ta över säljarens befintliga pantbrev. Du betalar bara stämpelskatt (2%) på de <em>nya</em> pantbrev som behövs för att täcka hela lånet. Anges på bostadsannonsen.</small>
           </label>
         </fieldset>
 
@@ -46,8 +80,15 @@
           <label>Ränta (%)
             <input type="number" step="0.01" name="interest_rate_pct" value="3.0" min="0" required />
           </label>
-          <label>Amortering (%)
+          <div class="rate-presets">
+            <span>Snabbval:</span>
+            <button type="button" class="rate-preset" data-rate="2.95">SBAB 3 mån 2,95%</button>
+            <button type="button" class="rate-preset" data-rate="3.00">Booli 3,00%</button>
+            <button type="button" class="rate-preset" data-rate="3.50">3 år bunden 3,50%</button>
+          </div>
+          <label style="margin-top:1rem">Amortering (%)
             <input type="number" step="0.1" name="amortization_rate_pct" value="2.0" min="0" required />
+            <small class="muted">Sätts oftast automatiskt av banken efter LTV (se Insikter).</small>
           </label>
           <label>Löptid (år)
             <input type="number" name="loan_term_years" value="50" min="1" required />

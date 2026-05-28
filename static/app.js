@@ -51,6 +51,115 @@ function updateHpStatus() {
   hpStatus.textContent =
     `(${fmt(total)} = ${pct}% av priset, LTV ${ltv}%, krav ≥ ${fmt(min)})`;
   hpStatus.className = total >= min ? "ok" : "bad";
+  renderLiveSummary();
+}
+
+const fmtMon = (n) =>
+  new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(n) +
+  " kr/mån";
+
+function computeLiveSummary() {
+  const price = parseInt(form.price_kr.value || "0", 10);
+  const hpTotal = readHandpenning().reduce((s, x) => s + x.amount_kr, 0);
+  const existingPantbrev = parseInt(form.existing_pantbrev_kr.value || "0", 10);
+  const interestRate = parseFloat(form.interest_rate_pct.value || "0");
+  const amortRate = parseFloat(form.amortization_rate_pct.value || "0");
+  const monthlyFee = parseInt(form.monthly_fee_kr.value || "0", 10);
+  const horizonYears = parseInt(form.horizon_years.value || "10", 10);
+
+  const loan = Math.max(0, price - hpTotal);
+  const ltv = price > 0 ? (loan / price) * 100 : 0;
+  const hpPct = price > 0 ? (hpTotal / price) * 100 : 0;
+
+  const lagfart = price > 0 ? Math.round(0.015 * price) + 825 : 0;
+  const newPantbrev = Math.max(0, loan - existingPantbrev);
+  const pantbrev = newPantbrev > 0 ? Math.round(0.02 * newPantbrev) + 375 : 0;
+  const totalCashNeeded = hpTotal + lagfart + pantbrev;
+
+  const monthlyInterest = Math.round((loan * (interestRate / 100)) / 12);
+  const monthlyAmort = Math.round((loan * (amortRate / 100)) / 12);
+  const monthlyTotal = monthlyInterest + monthlyAmort + monthlyFee;
+
+  const annualInterest = monthlyInterest * 12;
+  const taxCredit =
+    annualInterest <= 100_000
+      ? Math.round(annualInterest * 0.3)
+      : Math.round(100_000 * 0.3 + (annualInterest - 100_000) * 0.21);
+  const monthlyAfterTax = monthlyTotal - Math.floor(taxCredit / 12);
+
+  return {
+    price,
+    hpTotal,
+    hpPct,
+    loan,
+    ltv,
+    lagfart,
+    pantbrev,
+    totalCashNeeded,
+    monthlyInterest,
+    monthlyAmort,
+    monthlyFee,
+    monthlyTotal,
+    monthlyAfterTax,
+    interestRate,
+    amortRate,
+    horizonYears,
+  };
+}
+
+function renderLiveSummary() {
+  const s = computeLiveSummary();
+  $("#ls-price").textContent = fmt(s.price);
+  $("#ls-hp-pct").textContent = `${s.hpPct.toFixed(1)}%`;
+  $("#ls-handpenning").textContent = fmt(s.hpTotal);
+  $("#ls-ltv").textContent = `${s.ltv.toFixed(1)}%`;
+  $("#ls-loan").textContent = fmt(s.loan);
+  $("#ls-lagfart").textContent = fmt(s.lagfart);
+  $("#ls-pantbrev").textContent = fmt(s.pantbrev);
+  $("#ls-total-cash").textContent = fmt(s.totalCashNeeded);
+  $("#ls-rate-pct").textContent = `${s.interestRate.toFixed(2)}%`;
+  $("#ls-amort-pct").textContent = `${s.amortRate.toFixed(1)}%`;
+  $("#ls-monthly-interest").textContent = fmtMon(s.monthlyInterest);
+  $("#ls-monthly-amort").textContent = fmtMon(s.monthlyAmort);
+  $("#ls-monthly-fee").textContent = fmtMon(s.monthlyFee);
+  $("#ls-monthly-total").textContent = fmtMon(s.monthlyTotal);
+  $("#ls-monthly-aftertax").textContent = fmtMon(s.monthlyAfterTax);
+  renderInsights(s);
+}
+
+function renderInsights(s) {
+  const annualAmort = Math.round((s.loan * s.amortRate) / 100);
+  const totalAmort = Math.min(s.loan, annualAmort * s.horizonYears);
+  $("#ins-horizon").textContent = s.horizonYears;
+  $("#ins-amort-total").textContent = fmt(totalAmort);
+
+  const targetLoan = 0.7 * s.price;
+  if (s.loan > targetLoan && annualAmort > 0) {
+    const yearsToTier = Math.ceil((s.loan - targetLoan) / annualAmort);
+    $("#ins-tier-drop-years").textContent = `${yearsToTier} år`;
+    $("#ins-tier-drop-row").hidden = false;
+  } else {
+    $("#ins-tier-drop-row").hidden = true;
+  }
+
+  const tiers = [
+    { pct: 10, amortPct: 2 },
+    { pct: 30, amortPct: 1 },
+    { pct: 50, amortPct: 0 },
+  ];
+  $("#tier-table-body").innerHTML = tiers
+    .map((t) => {
+      const hp = Math.round((s.price * t.pct) / 100);
+      const loan = s.price - hp;
+      const ltv = 100 - t.pct;
+      const monthly = Math.round((loan * t.amortPct) / 100 / 12);
+      return `<tr>
+        <td>${fmt(hp)} (${t.pct}%)</td>
+        <td>${ltv}%</td>
+        <td>${fmt(monthly)}/mån (${t.amortPct}%)</td>
+      </tr>`;
+    })
+    .join("");
 }
 
 function readForm() {
@@ -196,7 +305,14 @@ function renderMonthlyChart(m) {
 }
 
 // init
-form.price_kr.addEventListener("input", updateHpStatus);
+form.addEventListener("input", renderLiveSummary);
 $("#add-hp").addEventListener("click", () => addHandpenningRow());
+document.querySelectorAll(".rate-preset").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    form.interest_rate_pct.value = btn.dataset.rate;
+    renderLiveSummary();
+  });
+});
 form.addEventListener("submit", calculate);
 addHandpenningRow("Sparpengar", 400000);
+renderLiveSummary();
