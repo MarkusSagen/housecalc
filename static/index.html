@@ -125,7 +125,7 @@
           <small class="muted" style="margin-top:0.3rem">Anges på bostadsannonsen. Du betalar bara 2% stämpelskatt på <em>nya</em> pantbrev utöver det här beloppet.</small>
         </div>
 
-        <div class="control control-row-input">
+        <div class="control">
           <div class="control-head">
             <label for="fee-input">Avgift / drift per månad</label>
             <div class="control-value">
@@ -133,6 +133,8 @@
               <span class="control-unit">kr</span>
             </div>
           </div>
+          <input type="range" class="slider" id="fee-slider" min="0" max="25000" step="100" value="4500" />
+          <div class="slider-marks"><span>0</span><span>5k</span><span>10k</span><span>15k</span><span>20k</span><span>25k</span></div>
           <small class="muted" style="margin-top:0.3rem">Avgift (BRF) eller driftkostnad (villa).</small>
         </div>
       </div>

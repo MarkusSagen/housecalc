@@ -26,6 +26,7 @@ const amortSlider = $("#amort-slider");
 const amortMeta = $("#amort-meta");
 const existingPantbrevInput = $("#existing-pantbrev-input");
 const feeInput = $("#fee-input");
+const feeSlider = $("#fee-slider");
 const hpRows = $("#hp-rows");
 
 const incomeInput = document.querySelector('[name="gross_household_income_kr_year"]');
@@ -194,7 +195,7 @@ function renderLiveSummary() {
 
 function updateSliderProgress() {
   // Visual fill on the slider track
-  for (const s of [priceSlider, hpSlider, rateSlider, amortSlider]) {
+  for (const s of [priceSlider, hpSlider, rateSlider, amortSlider, feeSlider]) {
     const min = +s.min;
     const max = +s.max;
     const val = +s.value;
@@ -603,6 +604,23 @@ rateSlider.addEventListener("input", syncRateSlider);
 rateInput.addEventListener("input", syncRateInput);
 amortSlider.addEventListener("input", syncAmortSlider);
 amortInput.addEventListener("input", syncAmortInput);
+
+feeSlider.addEventListener("input", () => {
+  suppressSync = true;
+  feeInput.value = fmtThousands(+feeSlider.value);
+  suppressSync = false;
+  renderLiveSummary();
+});
+feeInput.addEventListener("input", () => {
+  if (suppressSync) return;
+  const v = parseDigits(feeInput.value);
+  if (Number.isFinite(v)) {
+    suppressSync = true;
+    feeSlider.value = Math.min(+feeSlider.max, Math.max(+feeSlider.min, v));
+    suppressSync = false;
+  }
+  // renderLiveSummary will be called by the existing listener below
+});
 
 $$(".rate-preset").forEach((btn) => {
   btn.addEventListener("click", () => {
