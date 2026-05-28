@@ -232,3 +232,18 @@ small.muted { display: block; margin-top: 0.25rem; font-size: 0.8rem; line-heigh
 .tier-table td:not(:first-child) { text-align: right; }
 .tier-table th:not(:first-child) { text-align: right; }
 .tier-table tr:last-child td { border-bottom: none; }
+.tier-table tr.current td {
+  background: var(--accent-light);
+  font-weight: 600;
+  color: var(--accent);
+}
+.tier-table tr.current td:first-child { border-left: 3px solid var(--accent); padding-left: 0.5rem; }
+
+.ins-h3 {
+  margin: 1.25rem 0 0.4rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}

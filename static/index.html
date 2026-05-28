@@ -39,13 +39,24 @@
         <h2>Insikter</h2>
         <p>Om <strong><span id="ins-horizon">10</span> år</strong> har du amorterat <strong id="ins-amort-total">— kr</strong> på lånet.</p>
         <p id="ins-tier-drop-row" hidden>Amorteringskravet sjunker till 1% om <strong id="ins-tier-drop-years">— år</strong> (när LTV når 70%, utan värdestegring).</p>
+        <p id="ins-dti-row" hidden>Lånet är <strong id="ins-dti">—</strong> hushållets bruttoinkomst.<span id="ins-dti-extra"></span></p>
+
+        <h3 class="ins-h3">Vad händer om du lägger mer i kontantinsats?</h3>
         <table class="tier-table">
           <thead>
             <tr><th>Kontantinsats</th><th>LTV</th><th>Amortering/mån</th></tr>
           </thead>
           <tbody id="tier-table-body"></tbody>
         </table>
-        <p class="small muted" style="margin-top:0.5rem">Tabellen visar Finansinspektionens nivåer: &gt;70% LTV = 2%, 50–70% = 1%, ≤50% = 0%. Lägg till mer kontantinsats för att hamna i en lägre nivå.</p>
+        <p class="small muted" style="margin-top:0.5rem">Finansinspektionens nivåer: &gt;70% LTV = 2%, 50–70% = 1%, ≤50% = 0%. Plus +1% om lånet är &gt; 4,5× årsinkomsten.</p>
+
+        <h3 class="ins-h3">Stresstest: om räntan stiger</h3>
+        <table class="tier-table">
+          <thead>
+            <tr><th>Ränta</th><th>Månadskostnad</th><th>Efter ränteavdrag</th></tr>
+          </thead>
+          <tbody id="stress-body"></tbody>
+        </table>
       </div>
 
       <form id="calc-form">

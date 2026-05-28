@@ -66,10 +66,15 @@ function computeLiveSummary() {
   const amortRate = parseFloat(form.amortization_rate_pct.value || "0");
   const monthlyFee = parseInt(form.monthly_fee_kr.value || "0", 10);
   const horizonYears = parseInt(form.horizon_years.value || "10", 10);
+  const grossIncome = parseInt(
+    form.gross_household_income_kr_year.value || "0",
+    10,
+  );
 
   const loan = Math.max(0, price - hpTotal);
   const ltv = price > 0 ? (loan / price) * 100 : 0;
   const hpPct = price > 0 ? (hpTotal / price) * 100 : 0;
+  const dti = grossIncome > 0 ? loan / grossIncome : 0;
 
   const lagfart = price > 0 ? Math.round(0.015 * price) + 825 : 0;
   const newPantbrev = Math.max(0, loan - existingPantbrev);
@@ -93,6 +98,8 @@ function computeLiveSummary() {
     hpPct,
     loan,
     ltv,
+    dti,
+    grossIncome,
     lagfart,
     pantbrev,
     totalCashNeeded,
@@ -105,6 +112,15 @@ function computeLiveSummary() {
     amortRate,
     horizonYears,
   };
+}
+
+function ranteavdragMonthlyCredit(monthlyInterestKr) {
+  const annual = monthlyInterestKr * 12;
+  const credit =
+    annual <= 100_000
+      ? Math.round(annual * 0.3)
+      : Math.round(100_000 * 0.3 + (annual - 100_000) * 0.21);
+  return Math.floor(credit / 12);
 }
 
 function renderLiveSummary() {
@@ -142,24 +158,60 @@ function renderInsights(s) {
     $("#ins-tier-drop-row").hidden = true;
   }
 
+  if (s.grossIncome > 0 && s.loan > 0) {
+    $("#ins-dti").textContent = `${s.dti.toFixed(1)}×`;
+    if (s.dti > 4.5) {
+      $("#ins-dti-extra").innerHTML =
+        ' Över 4,5× → <strong>+1% extra amorteringskrav</strong> (FI:s skuldkvotsregel).';
+    } else {
+      $("#ins-dti-extra").textContent =
+        ' Under 4,5× — inget extra amorteringskrav.';
+    }
+    $("#ins-dti-row").hidden = false;
+  } else {
+    $("#ins-dti-row").hidden = true;
+  }
+
+  const tierRows = [];
+  tierRows.push(`<tr class="current">
+    <td>${fmt(s.hpTotal)} (${s.hpPct.toFixed(1)}%, nuvarande)</td>
+    <td>${s.ltv.toFixed(1)}%</td>
+    <td>${fmt(s.monthlyAmort)}/mån (${s.amortRate.toFixed(1)}%)</td>
+  </tr>`);
   const tiers = [
     { pct: 10, amortPct: 2 },
     { pct: 30, amortPct: 1 },
     { pct: 50, amortPct: 0 },
   ];
-  $("#tier-table-body").innerHTML = tiers
-    .map((t) => {
-      const hp = Math.round((s.price * t.pct) / 100);
-      const loan = s.price - hp;
-      const ltv = 100 - t.pct;
-      const monthly = Math.round((loan * t.amortPct) / 100 / 12);
-      return `<tr>
-        <td>${fmt(hp)} (${t.pct}%)</td>
-        <td>${ltv}%</td>
-        <td>${fmt(monthly)}/mån (${t.amortPct}%)</td>
-      </tr>`;
-    })
-    .join("");
+  for (const t of tiers) {
+    const hp = Math.round((s.price * t.pct) / 100);
+    const loan = s.price - hp;
+    const ltv = 100 - t.pct;
+    const monthly = Math.round((loan * t.amortPct) / 100 / 12);
+    tierRows.push(`<tr>
+      <td>${fmt(hp)} (${t.pct}%)</td>
+      <td>${ltv}%</td>
+      <td>${fmt(monthly)}/mån (${t.amortPct}%)</td>
+    </tr>`);
+  }
+  $("#tier-table-body").innerHTML = tierRows.join("");
+
+  const stressDeltas = [0, 1, 2, 3];
+  const stressRows = stressDeltas.map((dp) => {
+    const newRate = s.interestRate + dp;
+    const newInterest = Math.round((s.loan * newRate) / 100 / 12);
+    const newTotal = newInterest + s.monthlyAmort + s.monthlyFee;
+    const afterTax = newTotal - ranteavdragMonthlyCredit(newInterest);
+    const rowClass = dp === 0 ? "current" : "";
+    const deltaLabel =
+      dp === 0 ? "nuvarande" : `+${dp.toFixed(1)}pp → ${newRate.toFixed(2)}%`;
+    return `<tr class="${rowClass}">
+      <td>${dp === 0 ? newRate.toFixed(2) + "%" : deltaLabel}${dp === 0 ? " (nuvarande)" : ""}</td>
+      <td>${fmt(newTotal)}/mån</td>
+      <td>${fmt(afterTax)}/mån</td>
+    </tr>`;
+  });
+  $("#stress-body").innerHTML = stressRows.join("");
 }
 
 function readForm() {
