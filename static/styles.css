@@ -519,3 +519,76 @@ button.ghost {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* ============ PAYOFF SECTION ============ */
+.payoff-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+.payoff-head h2 { margin: 0; }
+.payoff-controls label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.payoff-controls input {
+  width: 5rem;
+  padding: 0.35rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.payoff-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+@media (max-width: 800px) {
+  .payoff-stats { grid-template-columns: repeat(2, 1fr); }
+}
+.po-stat {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+}
+.po-stat-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.po-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  margin: 0.2rem 0 0.15rem;
+}
+.po-stat-sub {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.payoff-chart-wrap {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  height: 360px;
+  position: relative;
+}
+.payoff-chart-wrap canvas { width: 100% !important; height: 100% !important; }

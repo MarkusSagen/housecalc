@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Housecalc — Räkna på bolån</title>
   <link rel="stylesheet" href="/static/styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -179,6 +180,47 @@
         </table>
         <p class="small muted" style="margin-top:0.5rem">Behåll samma amortering — bara räntan ändras.</p>
       </div>
+    </section>
+
+    <!-- PAYOFF PROJECTION -->
+    <section class="card payoff-section">
+      <div class="payoff-head">
+        <h2>Återbetalningsplan — hur lång tid till skuldfri?</h2>
+        <div class="payoff-controls">
+          <label>Värdestegring/år (%)
+            <input type="number" id="appreciation-input" value="0" step="0.5" min="0" max="20" />
+          </label>
+        </div>
+      </div>
+      <p class="small muted">Simulerar Finansinspektionens regler: amorteringsnivån sjunker automatiskt allt eftersom belåningsgraden faller (&gt;70% = 2%, 50–70% = 1%, ≤50% = 0%). Plus +1% om lånet är &gt; 4,5× årsinkomsten. Amortering räknas på <em>ursprungligt</em> lån.</p>
+
+      <div class="payoff-stats">
+        <div class="po-stat">
+          <div class="po-stat-label">Når 70% LTV</div>
+          <div class="po-stat-value" id="po-tier-1">— år</div>
+          <div class="po-stat-sub">Amortering går ner till 1%</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Når 50% LTV</div>
+          <div class="po-stat-value" id="po-tier-0">— år</div>
+          <div class="po-stat-sub">Inget amorteringskrav (du kan sluta amortera)</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Fullt avbetalt (om du slutar)</div>
+          <div class="po-stat-value" id="po-paid">— år</div>
+          <div class="po-stat-sub" id="po-paid-sub">Vid 0% amorteringskrav stannar lånet</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Total ränta över 30 år</div>
+          <div class="po-stat-value" id="po-total-interest">— kr</div>
+          <div class="po-stat-sub">Vid nuvarande ränta, lagstadgad amortering</div>
+        </div>
+      </div>
+
+      <div class="payoff-chart-wrap">
+        <canvas id="payoff-chart"></canvas>
+      </div>
+      <p class="small muted" style="margin-top:0.5rem">Blå linje = lagstadgad minimi-amortering (sjunker stegvis). Orange linje = om du fortsätter amortera 2% (frivilligt) tills fullt avbetalt.</p>
     </section>
 
     <!-- COMPARE PRICES -->

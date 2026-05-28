@@ -30,6 +30,8 @@ const hpRows = $("#hp-rows");
 
 const incomeInput = document.querySelector('[name="gross_household_income_kr_year"]');
 const horizonInput = document.querySelector('[name="horizon_years"]');
+const appreciationInput = $("#appreciation-input");
+let payoffChart = null;
 
 let suppressSync = false;
 const comparePrices = [];
@@ -187,6 +189,7 @@ function renderLiveSummary() {
   updateSliderProgress();
   renderInsights(p, r, dti);
   updateCompareValues(p);
+  renderPayoff(p, r, dti);
 }
 
 function updateSliderProgress() {
@@ -272,6 +275,163 @@ function renderInsights(p, r, dti) {
       </tr>`;
     })
     .join("");
+}
+
+// ===== Payoff projection =====
+
+function ltvTierAmortPct(ltvPct, dti) {
+  let pct = 0;
+  if (ltvPct > 70) pct = 2;
+  else if (ltvPct > 50) pct = 1;
+  if (dti > 4.5) pct += 1;
+  return pct;
+}
+
+function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, maxYears = 50) {
+  const fiSeries = [];
+  const voluntarySeries = [];
+  let remainingFi = initialLoan;
+  let remainingVol = initialLoan;
+  let houseValue = initialPrice;
+  let totalInterestFi = 0;
+  let totalInterestVol = 0;
+
+  let yearTier1 = null;
+  let yearTier0 = null;
+  let yearPaidOffFi = null;
+  let yearPaidOffVol = null;
+
+  fiSeries.push({ year: 0, remaining: remainingFi, ltv: 100 * remainingFi / houseValue });
+  voluntarySeries.push({ year: 0, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });
+
+  const voluntaryAnnualAmort = 0.02 * initialLoan; // 2% of original, kept up voluntarily
+
+  for (let year = 1; year <= maxYears; year++) {
+    // House appreciates first (FI re-evaluates LTV annually)
+    houseValue = houseValue * (1 + appreciationPct / 100);
+
+    // FI track
+    const ltvFi = (remainingFi / houseValue) * 100;
+    const amortPctFi = ltvTierAmortPct(ltvFi, dti);
+    const annualAmortFi = (amortPctFi / 100) * initialLoan;
+    const interestFi = remainingFi * (rate / 100);
+    const paidFi = Math.min(annualAmortFi, remainingFi);
+    remainingFi = Math.max(0, remainingFi - paidFi);
+    totalInterestFi += interestFi;
+
+    if (yearTier1 === null && ltvFi <= 70) yearTier1 = year;
+    if (yearTier0 === null && ltvFi <= 50) yearTier0 = year;
+    if (yearPaidOffFi === null && remainingFi <= 0) yearPaidOffFi = year;
+
+    fiSeries.push({ year, remaining: remainingFi, ltv: ltvFi });
+
+    // Voluntary 2% track
+    const interestVol = remainingVol * (rate / 100);
+    const paidVol = Math.min(voluntaryAnnualAmort, remainingVol);
+    remainingVol = Math.max(0, remainingVol - paidVol);
+    totalInterestVol += interestVol;
+    if (yearPaidOffVol === null && remainingVol <= 0) yearPaidOffVol = year;
+
+    voluntarySeries.push({ year, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });
+  }
+
+  return {
+    fiSeries,
+    voluntarySeries,
+    yearTier1,
+    yearTier0,
+    yearPaidOffFi,
+    yearPaidOffVol,
+    totalInterestFi30: fiSeries.slice(1, 31).reduce((s, _, i) => {
+      // recompute interest at start-of-year balance; approximate via remaining*rate
+      const startBalance = fiSeries[i].remaining;
+      return s + startBalance * (rate / 100);
+    }, 0),
+  };
+}
+
+function renderPayoff(p, r, dti) {
+  const appreciation = parseFloat(appreciationInput.value || "0");
+  const proj = projectPayoff(r.loan, p.price, p.rate, dti, appreciation, 50);
+
+  $("#po-tier-1").textContent = proj.yearTier1 !== null ? `${proj.yearTier1} år` : "—";
+  $("#po-tier-0").textContent = proj.yearTier0 !== null ? `${proj.yearTier0} år` : "—";
+
+  if (proj.yearPaidOffFi !== null) {
+    $("#po-paid").textContent = `${proj.yearPaidOffFi} år`;
+    $("#po-paid-sub").textContent = "Med lagstadgad amortering + värdestegring";
+  } else if (proj.yearPaidOffVol !== null) {
+    $("#po-paid").textContent = `${proj.yearPaidOffVol} år`;
+    $("#po-paid-sub").textContent = "Om du fortsätter 2% även efter att kravet upphör";
+  } else {
+    $("#po-paid").textContent = "—";
+    $("#po-paid-sub").textContent = "Ej fullt avbetalt inom 50 år";
+  }
+
+  $("#po-total-interest").textContent = fmt(Math.round(proj.totalInterestFi30));
+
+  const labels = proj.fiSeries.map((d) => `År ${d.year}`);
+  const ctx = $("#payoff-chart").getContext("2d");
+  if (payoffChart) payoffChart.destroy();
+  payoffChart = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Lagstadgad min-amortering (tier-baserad)",
+          data: proj.fiSeries.map((d) => d.remaining),
+          borderColor: "#1a4480",
+          backgroundColor: "rgba(26,68,128,0.12)",
+          fill: true,
+          tension: 0.2,
+          borderWidth: 2.5,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+        {
+          label: "Frivilligt 2% hela vägen",
+          data: proj.voluntarySeries.map((d) => d.remaining),
+          borderColor: "#b85c00",
+          backgroundColor: "rgba(184,92,0,0.04)",
+          borderDash: [6, 4],
+          fill: false,
+          tension: 0.2,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { position: "bottom", labels: { font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const d = proj.fiSeries[ctx.dataIndex];
+              const ltv = d ? ` · LTV ${d.ltv.toFixed(1)}%` : "";
+              return `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}${
+                ctx.datasetIndex === 0 ? ltv : ""
+              }`;
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          ticks: { callback: (v) => fmt(v) },
+          title: { display: true, text: "Återstående lån" },
+        },
+        x: {
+          title: { display: true, text: "År från köp" },
+        },
+      },
+    },
+  });
 }
 
 // ===== Compare prices: structure built once per add/remove, values updated on render =====
@@ -454,7 +614,7 @@ $$(".rate-preset").forEach((btn) => {
   });
 });
 
-[existingPantbrevInput, feeInput].forEach((el) =>
+[existingPantbrevInput, feeInput, appreciationInput].forEach((el) =>
   el.addEventListener("input", renderLiveSummary),
 );
 [incomeInput, horizonInput].forEach((el) =>
