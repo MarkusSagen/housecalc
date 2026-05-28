@@ -20,46 +20,76 @@ const amortInput = $("#amort-input");
 const amortSlider = $("#amort-slider");
 const amortMeta = $("#amort-meta");
 const hpRows = $("#hp-rows");
-const results = $("#results");
-const formError = $("#form-error");
 
 const feeInput = document.querySelector('[name="monthly_fee_kr"]');
 const existingPantbrevInput = document.querySelector('[name="existing_pantbrev_kr"]');
 const incomeInput = document.querySelector('[name="gross_household_income_kr_year"]');
-const housingTypeInput = document.querySelector('[name="housing_type"]');
-const loanTermInput = document.querySelector('[name="loan_term_years"]');
 const horizonInput = document.querySelector('[name="horizon_years"]');
-const waitMonthsInput = document.querySelector('[name="wait_months"]');
-const monthlySavingsInput = document.querySelector('[name="monthly_savings_kr"]');
-const stockReturnInput = document.querySelector('[name="stock_return_pct"]');
-const houseApprInput = document.querySelector('[name="house_appreciation_pct"]');
-const waitKontantinsatsInput = document.querySelector('[name="wait_kontantinsats_pct"]');
 
-let networthChart = null;
-let monthlyChart = null;
 let suppressSync = false;
+const comparePrices = [];
 
-function syncFromPriceOrPct() {
-  if (suppressSync) return;
-  const price = +priceInput.value || 0;
-  const pct = +hpSlider.value;
-  const newAmount = Math.round((price * pct) / 100);
-  suppressSync = true;
-  hpInput.value = newAmount;
-  suppressSync = false;
-  renderLiveSummary();
+function ranteavdragMonthlyCredit(monthlyInterestKr) {
+  const annual = monthlyInterestKr * 12;
+  const credit =
+    annual <= 100_000
+      ? Math.round(annual * 0.3)
+      : Math.round(100_000 * 0.3 + (annual - 100_000) * 0.21);
+  return Math.floor(credit / 12);
 }
 
-function syncFromHpAmount() {
-  if (suppressSync) return;
-  const price = +priceInput.value || 0;
-  const amount = +hpInput.value || 0;
-  const pct = price > 0 ? (amount / price) * 100 : 0;
-  suppressSync = true;
-  hpSlider.value = Math.min(50, Math.max(0, pct));
-  suppressSync = false;
-  renderLiveSummary();
+function recommendedAmortPct(ltvPct, dti) {
+  let pct = 0;
+  if (ltvPct > 70) pct = 2;
+  else if (ltvPct > 50) pct = 1;
+  if (dti > 4.5) pct += 1;
+  return pct;
 }
+
+function computeForPrice(price, params) {
+  const { hpPct, existingPantbrev, rate, amort, monthlyFee } = params;
+  const hpTotal = Math.round((price * hpPct) / 100);
+  const loan = Math.max(0, price - hpTotal);
+  const ltv = price > 0 ? (loan / price) * 100 : 0;
+
+  const lagfart = price > 0 ? Math.round(0.015 * price) + 825 : 0;
+  const newPantbrev = Math.max(0, loan - existingPantbrev);
+  const pantbrev = newPantbrev > 0 ? Math.round(0.02 * newPantbrev) + 375 : 0;
+  const onetimeTotal = hpTotal + lagfart + pantbrev;
+
+  const monthlyInterest = Math.round((loan * (rate / 100)) / 12);
+  const monthlyAmort = Math.round((loan * (amort / 100)) / 12);
+  const monthlyTotal = monthlyInterest + monthlyAmort + monthlyFee;
+  const monthlyAfterTax = monthlyTotal - ranteavdragMonthlyCredit(monthlyInterest);
+
+  return {
+    price, hpTotal, loan, ltv, lagfart, pantbrev, onetimeTotal,
+    monthlyInterest, monthlyAmort, monthlyFee, monthlyTotal, monthlyAfterTax,
+  };
+}
+
+function readPrimaryParams() {
+  const price = parseInt(priceInput.value || "0", 10);
+  const hpFromSources = readHandpenningSources().reduce(
+    (s, x) => s + (x.amount_kr || 0),
+    0,
+  );
+  const hpTotal = hpFromSources > 0 ? hpFromSources : parseInt(hpInput.value || "0", 10);
+  const hpPct = price > 0 ? (hpTotal / price) * 100 : 0;
+  return {
+    price,
+    hpTotal,
+    hpPct,
+    existingPantbrev: parseInt(existingPantbrevInput.value || "0", 10),
+    rate: parseFloat(rateInput.value || "0"),
+    amort: parseFloat(amortInput.value || "0"),
+    monthlyFee: parseInt(feeInput.value || "0", 10),
+    horizonYears: parseInt(horizonInput.value || "10", 10),
+    grossIncome: parseInt(incomeInput.value || "0", 10),
+  };
+}
+
+// ===== Handpenning sources (optional, in secondary section) =====
 
 function addHandpenningRow(label = "", amount = "") {
   const row = document.createElement("div");
@@ -90,114 +120,59 @@ function readHandpenningSources() {
   }));
 }
 
-function effectiveHandpenningKr() {
-  const sources = readHandpenningSources();
-  const fromSources = sources.reduce((s, x) => s + (x.amount_kr || 0), 0);
-  if (fromSources > 0) return fromSources;
-  return parseInt(hpInput.value || "0", 10);
-}
-
-function ranteavdragMonthlyCredit(monthlyInterestKr) {
-  const annual = monthlyInterestKr * 12;
-  const credit =
-    annual <= 100_000
-      ? Math.round(annual * 0.3)
-      : Math.round(100_000 * 0.3 + (annual - 100_000) * 0.21);
-  return Math.floor(credit / 12);
-}
-
-function recommendedAmortPct(ltvPct, dti) {
-  let pct = 0;
-  if (ltvPct > 70) pct = 2;
-  else if (ltvPct > 50) pct = 1;
-  if (dti > 4.5) pct += 1;
-  return pct;
-}
-
-function computeLiveSummary() {
-  const price = parseInt(priceInput.value || "0", 10);
-  const hpTotal = effectiveHandpenningKr();
-  const existingPantbrev = parseInt(existingPantbrevInput.value || "0", 10);
-  const interestRate = parseFloat(rateInput.value || "0");
-  const amortRate = parseFloat(amortInput.value || "0");
-  const monthlyFee = parseInt(feeInput.value || "0", 10);
-  const horizonYears = parseInt(horizonInput.value || "10", 10);
-  const grossIncome = parseInt(incomeInput.value || "0", 10);
-
-  const loan = Math.max(0, price - hpTotal);
-  const ltv = price > 0 ? (loan / price) * 100 : 0;
-  const hpPct = price > 0 ? (hpTotal / price) * 100 : 0;
-  const dti = grossIncome > 0 ? loan / grossIncome : 0;
-
-  const lagfart = price > 0 ? Math.round(0.015 * price) + 825 : 0;
-  const newPantbrev = Math.max(0, loan - existingPantbrev);
-  const pantbrev = newPantbrev > 0 ? Math.round(0.02 * newPantbrev) + 375 : 0;
-  const onetimeTotal = hpTotal + lagfart + pantbrev;
-
-  const monthlyInterest = Math.round((loan * (interestRate / 100)) / 12);
-  const monthlyAmort = Math.round((loan * (amortRate / 100)) / 12);
-  const monthlyTotal = monthlyInterest + monthlyAmort + monthlyFee;
-  const monthlyAfterTax = monthlyTotal - ranteavdragMonthlyCredit(monthlyInterest);
-
-  return {
-    price, hpTotal, hpPct, loan, ltv, dti, grossIncome,
-    lagfart, pantbrev, onetimeTotal,
-    monthlyInterest, monthlyAmort, monthlyFee, monthlyTotal, monthlyAfterTax,
-    interestRate, amortRate, horizonYears,
-  };
-}
+// ===== Render =====
 
 function renderLiveSummary() {
-  const s = computeLiveSummary();
+  const p = readPrimaryParams();
+  const r = computeForPrice(p.price, p);
+  const dti = p.grossIncome > 0 ? r.loan / p.grossIncome : 0;
 
-  // Hero headline
-  $("#hero-monthly").textContent = fmtMon(s.monthlyTotal);
-  $("#hero-monthly-after").textContent = fmtMon(s.monthlyAfterTax);
+  $("#hero-monthly").textContent = fmtMon(r.monthlyTotal);
+  $("#hero-monthly-after").textContent = fmtMon(r.monthlyAfterTax);
 
-  // Hero cards
-  $("#hc-interest").textContent = fmtMon(s.monthlyInterest);
-  $("#hc-amort").textContent = fmtMon(s.monthlyAmort);
-  $("#hc-fee").textContent = fmtMon(s.monthlyFee);
-  $("#hc-total").textContent = fmtMon(s.monthlyTotal);
+  $("#hc-interest").textContent = fmtMon(r.monthlyInterest);
+  $("#hc-amort").textContent = fmtMon(r.monthlyAmort);
+  $("#hc-fee").textContent = fmtMon(r.monthlyFee);
+  $("#hc-total").textContent = fmtMon(r.monthlyTotal);
 
-  $("#hc-lagfart").textContent = fmt(s.lagfart);
-  $("#hc-pantbrev").textContent = fmt(s.pantbrev);
-  $("#hc-kontantinsats").textContent = fmt(s.hpTotal);
-  $("#hc-onetime-total").textContent = fmt(s.onetimeTotal);
+  $("#hc-lagfart").textContent = fmt(r.lagfart);
+  $("#hc-pantbrev").textContent = fmt(r.pantbrev);
+  $("#hc-kontantinsats").textContent = fmt(r.hpTotal);
+  $("#hc-onetime-total").textContent = fmt(r.onetimeTotal);
 
-  $("#hc-total-cash").textContent = fmt(s.onetimeTotal);
-  $("#hcf-kontant").textContent = fmt(s.hpTotal);
-  $("#hcf-lagfart").textContent = fmt(s.lagfart);
-  $("#hcf-pantbrev").textContent = fmt(s.pantbrev);
-  $("#hc-loan").textContent = fmt(s.loan);
-  $("#hc-ltv").textContent = `${s.ltv.toFixed(1)}%`;
+  $("#hc-total-cash").textContent = fmt(r.onetimeTotal);
+  $("#hcf-kontant").textContent = fmt(r.hpTotal);
+  $("#hcf-lagfart").textContent = fmt(r.lagfart);
+  $("#hcf-pantbrev").textContent = fmt(r.pantbrev);
+  $("#hc-loan").textContent = fmt(r.loan);
+  $("#hc-ltv").textContent = `${r.ltv.toFixed(1)}%`;
 
-  // Slider meta
-  hpMeta.textContent = `${s.hpPct.toFixed(1)}% av priset · LTV ${s.ltv.toFixed(1)}%`;
-  const recAmort = recommendedAmortPct(s.ltv, s.dti);
-  amortMeta.textContent = `FI rekommenderar ${recAmort.toFixed(1)}% (LTV-tier${s.dti > 4.5 ? " + DTI" : ""})`;
+  hpMeta.textContent = `${p.hpPct.toFixed(1)}% av priset · LTV ${r.ltv.toFixed(1)}%`;
+  const recAmort = recommendedAmortPct(r.ltv, dti);
+  amortMeta.textContent = `FI rekommenderar ${recAmort.toFixed(1)}% (LTV-tier${dti > 4.5 ? " + DTI" : ""})`;
 
-  renderInsights(s);
+  renderInsights(p, r, dti);
+  renderCompareTable(p);
 }
 
-function renderInsights(s) {
-  const annualAmort = Math.round((s.loan * s.amortRate) / 100);
-  const totalAmort = Math.min(s.loan, annualAmort * s.horizonYears);
-  $("#ins-horizon").textContent = s.horizonYears;
+function renderInsights(p, r, dti) {
+  const annualAmort = Math.round((r.loan * p.amort) / 100);
+  const totalAmort = Math.min(r.loan, annualAmort * p.horizonYears);
+  $("#ins-horizon").textContent = p.horizonYears;
   $("#ins-amort-total").textContent = fmt(totalAmort);
 
-  const targetLoan = 0.7 * s.price;
-  if (s.loan > targetLoan && annualAmort > 0) {
-    const yearsToTier = Math.ceil((s.loan - targetLoan) / annualAmort);
+  const targetLoan = 0.7 * p.price;
+  if (r.loan > targetLoan && annualAmort > 0) {
+    const yearsToTier = Math.ceil((r.loan - targetLoan) / annualAmort);
     $("#ins-tier-drop-years").textContent = `${yearsToTier} år`;
     $("#ins-tier-drop-card").hidden = false;
   } else {
     $("#ins-tier-drop-card").hidden = true;
   }
 
-  if (s.grossIncome > 0 && s.loan > 0) {
-    $("#ins-dti").textContent = `${s.dti.toFixed(1)}×`;
-    if (s.dti > 4.5) {
+  if (p.grossIncome > 0 && r.loan > 0) {
+    $("#ins-dti").textContent = `${dti.toFixed(1)}×`;
+    if (dti > 4.5) {
       $("#ins-dti-extra").innerHTML =
         "Lånet är över 4,5× årsinkomsten → <strong>+1% extra amorteringskrav</strong>.";
     } else {
@@ -209,12 +184,11 @@ function renderInsights(s) {
     $("#ins-dti-card").hidden = true;
   }
 
-  // Tier table — current row + 10/30/50 references
   const tierRows = [];
   tierRows.push(`<tr class="current">
-    <td>${fmt(s.hpTotal)} (${s.hpPct.toFixed(1)}%, nuvarande)</td>
-    <td>${s.ltv.toFixed(1)}%</td>
-    <td>${fmt(s.monthlyAmort)}/mån (${s.amortRate.toFixed(1)}%)</td>
+    <td>${fmt(p.hpTotal)} (${p.hpPct.toFixed(1)}%, nuvarande)</td>
+    <td>${r.ltv.toFixed(1)}%</td>
+    <td>${fmt(r.monthlyAmort)}/mån (${p.amort.toFixed(1)}%)</td>
   </tr>`);
   const tiers = [
     { pct: 10, amortPct: 2 },
@@ -222,8 +196,8 @@ function renderInsights(s) {
     { pct: 50, amortPct: 0 },
   ];
   for (const t of tiers) {
-    const hp = Math.round((s.price * t.pct) / 100);
-    const loan = s.price - hp;
+    const hp = Math.round((p.price * t.pct) / 100);
+    const loan = p.price - hp;
     const ltv = 100 - t.pct;
     const monthly = Math.round((loan * t.amortPct) / 100 / 12);
     tierRows.push(`<tr>
@@ -234,13 +208,12 @@ function renderInsights(s) {
   }
   $("#tier-table-body").innerHTML = tierRows.join("");
 
-  // Stress test
   const stressDeltas = [0, 1, 2, 3];
   $("#stress-body").innerHTML = stressDeltas
     .map((dp) => {
-      const newRate = s.interestRate + dp;
-      const newInterest = Math.round((s.loan * newRate) / 100 / 12);
-      const newTotal = newInterest + s.monthlyAmort + s.monthlyFee;
+      const newRate = p.rate + dp;
+      const newInterest = Math.round((r.loan * newRate) / 100 / 12);
+      const newTotal = newInterest + r.monthlyAmort + r.monthlyFee;
       const afterTax = newTotal - ranteavdragMonthlyCredit(newInterest);
       const rowClass = dp === 0 ? "current" : "";
       const label =
@@ -256,17 +229,67 @@ function renderInsights(s) {
     .join("");
 }
 
+// ===== Compare prices table =====
+
+function renderCompareTable(primary) {
+  $("#cmp-pct-display").textContent = `${primary.hpPct.toFixed(1)}%`;
+
+  const rows = [];
+
+  rows.push({ price: primary.price, isCurrent: true, idx: -1 });
+  comparePrices.forEach((price, idx) => rows.push({ price, isCurrent: false, idx }));
+  rows.sort((a, b) => b.price - a.price);
+
+  $("#compare-body").innerHTML = rows
+    .map((row) => {
+      const c = computeForPrice(row.price, primary);
+      const priceCell = row.isCurrent
+        ? `<strong>${fmt(row.price)}</strong><div class="small muted">nuvarande</div>`
+        : `<input type="number" class="compare-price-input" data-idx="${row.idx}" value="${row.price}" min="1" step="10000" />`;
+      const removeCell = row.isCurrent
+        ? ""
+        : `<button type="button" class="compare-remove" data-idx="${row.idx}" aria-label="Ta bort">×</button>`;
+      return `<tr class="${row.isCurrent ? "current" : ""}">
+        <td>${priceCell}</td>
+        <td>${fmt(c.hpTotal)} <span class="muted small">(${primary.hpPct.toFixed(1)}%)</span></td>
+        <td>${fmt(c.loan)}</td>
+        <td>${fmt(c.lagfart)}</td>
+        <td>${fmt(c.pantbrev)}</td>
+        <td><strong>${fmt(c.onetimeTotal)}</strong></td>
+        <td>${fmt(c.monthlyTotal)}/mån</td>
+        <td>${fmt(c.monthlyAfterTax)}/mån</td>
+        <td>${removeCell}</td>
+      </tr>`;
+    })
+    .join("");
+
+  $$(".compare-price-input").forEach((inp) => {
+    inp.addEventListener("input", () => {
+      const idx = parseInt(inp.dataset.idx, 10);
+      comparePrices[idx] = parseInt(inp.value || "0", 10);
+      renderLiveSummary();
+    });
+  });
+  $$(".compare-remove").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      comparePrices.splice(idx, 1);
+      renderLiveSummary();
+    });
+  });
+}
+
 // ===== Slider/input bidirectional sync =====
 
 function bindPair(slider, input, opts = {}) {
-  const onSlider = () => {
+  slider.addEventListener("input", () => {
     suppressSync = true;
     input.value = slider.value;
     suppressSync = false;
     if (opts.afterSlider) opts.afterSlider();
     renderLiveSummary();
-  };
-  const onInput = () => {
+  });
+  input.addEventListener("input", () => {
     if (suppressSync) return;
     const v = +input.value;
     if (Number.isFinite(v)) {
@@ -276,25 +299,40 @@ function bindPair(slider, input, opts = {}) {
     }
     if (opts.afterInput) opts.afterInput();
     renderLiveSummary();
-  };
-  slider.addEventListener("input", onSlider);
-  input.addEventListener("input", onInput);
+  });
 }
 
-// Price: simple pair; also keep hp pct stable when price changes (re-derive hp amount)
+function syncFromPriceOrPct() {
+  if (suppressSync) return;
+  const price = +priceInput.value || 0;
+  const pct = +hpSlider.value;
+  const newAmount = Math.round((price * pct) / 100);
+  suppressSync = true;
+  hpInput.value = newAmount;
+  suppressSync = false;
+  renderLiveSummary();
+}
+
+function syncFromHpAmount() {
+  if (suppressSync) return;
+  const price = +priceInput.value || 0;
+  const amount = +hpInput.value || 0;
+  const pct = price > 0 ? (amount / price) * 100 : 0;
+  suppressSync = true;
+  hpSlider.value = Math.min(50, Math.max(0, pct));
+  suppressSync = false;
+  renderLiveSummary();
+}
+
 bindPair(priceSlider, priceInput, {
   afterSlider: syncFromPriceOrPct,
   afterInput: syncFromPriceOrPct,
 });
-
-// Handpenning: slider is %, input is kr — need custom sync
 hpSlider.addEventListener("input", syncFromPriceOrPct);
 hpInput.addEventListener("input", syncFromHpAmount);
-
 bindPair(rateSlider, rateInput);
 bindPair(amortSlider, amortInput);
 
-// Rate presets
 $$(".rate-preset").forEach((btn) => {
   btn.addEventListener("click", () => {
     rateInput.value = btn.dataset.rate;
@@ -303,163 +341,18 @@ $$(".rate-preset").forEach((btn) => {
   });
 });
 
-// Secondary inputs trigger live summary too
-[
-  feeInput,
-  existingPantbrevInput,
-  incomeInput,
-  housingTypeInput,
-  loanTermInput,
-  horizonInput,
-  waitMonthsInput,
-  monthlySavingsInput,
-  stockReturnInput,
-  houseApprInput,
-  waitKontantinsatsInput,
-].forEach((el) => el.addEventListener("input", renderLiveSummary));
+[feeInput, existingPantbrevInput, incomeInput, horizonInput].forEach((el) =>
+  el.addEventListener("input", renderLiveSummary),
+);
 
-// Handpenning sources
 $("#add-hp").addEventListener("click", () => addHandpenningRow());
 
-// ===== Submit handler =====
+$("#add-compare").addEventListener("click", () => {
+  const current = parseInt(priceInput.value || "0", 10);
+  const suggestion = Math.round((current * 1.1) / 10000) * 10000;
+  comparePrices.push(suggestion);
+  renderLiveSummary();
+});
 
-async function calculate() {
-  formError.hidden = true;
-  results.hidden = true;
-  const sources = readHandpenningSources();
-  const hpFromSources = sources.reduce((s, x) => s + (x.amount_kr || 0), 0);
-  const handpenningPayload =
-    hpFromSources > 0
-      ? sources
-      : [
-          {
-            label: "Kontantinsats",
-            amount_kr: parseInt(hpInput.value || "0", 10),
-          },
-        ];
-
-  const payload = {
-    price_kr: parseInt(priceInput.value || "0", 10),
-    housing_type: housingTypeInput.value,
-    monthly_fee_kr: parseInt(feeInput.value || "0", 10),
-    existing_pantbrev_kr: parseInt(existingPantbrevInput.value || "0", 10),
-    handpenning_sources: handpenningPayload,
-    interest_rate_pct: parseFloat(rateInput.value || "0"),
-    amortization_rate_pct: parseFloat(amortInput.value || "0"),
-    loan_term_years: parseInt(loanTermInput.value || "50", 10),
-    wait_months: parseInt(waitMonthsInput.value || "12", 10),
-    monthly_savings_kr: parseInt(monthlySavingsInput.value || "0", 10),
-    stock_return_pct: parseFloat(stockReturnInput.value || "7"),
-    house_appreciation_pct: parseFloat(houseApprInput.value || "3"),
-    wait_kontantinsats_pct: parseFloat(waitKontantinsatsInput.value || "10"),
-    horizon_years: parseInt(horizonInput.value || "10", 10),
-    gross_household_income_kr_year: parseInt(incomeInput.value || "0", 10),
-  };
-
-  try {
-    const r = await fetch("/api/calculate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    if (!r.ok) {
-      const err = await r.json().catch(() => ({ detail: "Okänt fel" }));
-      const msg = Array.isArray(err.detail)
-        ? err.detail.map((d) => d.msg).join("; ")
-        : err.detail;
-      throw new Error(msg);
-    }
-    const data = await r.json();
-    renderResults(data);
-  } catch (e) {
-    formError.textContent = e.message;
-    formError.hidden = false;
-  }
-}
-
-$("#submit-btn").addEventListener("click", calculate);
-
-function renderResults(data) {
-  results.hidden = false;
-  renderComparisonSummary(data.summary);
-  renderNetworthChart(data.buy_now.yearly, data.wait_and_invest.yearly);
-  renderMonthlyChart(data.buy_now.monthly_at_start);
-  results.scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-function renderComparisonSummary(s) {
-  const winner = s.better_scenario === "buy_now" ? "Köp nu" : "Vänta och investera";
-  $("#summary-body").innerHTML = `
-    <div class="summary-row"><span class="label">Köp nu (förmögenhet vid horisont):</span><span class="value">${fmt(s.buy_now_net_worth_kr)}</span></div>
-    <div class="summary-row"><span class="label">Vänta och investera:</span><span class="value">${fmt(s.wait_invest_net_worth_kr)}</span></div>
-    <div class="summary-row winner"><span class="label">Bättre alternativ:</span><span class="value">${winner} (+${fmt(s.difference_kr)})</span></div>
-  `;
-}
-
-function renderNetworthChart(buyYears, waitYears) {
-  const labels = buyYears.map((y) => `År ${y.year}`);
-  const ctx = $("#networth-chart").getContext("2d");
-  if (networthChart) networthChart.destroy();
-  networthChart = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels,
-      datasets: [
-        {
-          label: "Köp nu",
-          data: buyYears.map((y) => y.net_worth_kr),
-          borderColor: "#1a4480",
-          backgroundColor: "rgba(26,68,128,0.1)",
-          tension: 0.2,
-        },
-        {
-          label: "Vänta och investera",
-          data: waitYears.map((y) => y.net_worth_kr),
-          borderColor: "#b85c00",
-          backgroundColor: "rgba(184,92,0,0.1)",
-          tension: 0.2,
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          callbacks: { label: (ctx) => `${ctx.dataset.label}: ${fmt(ctx.parsed.y)}` },
-        },
-      },
-      scales: { y: { ticks: { callback: (v) => fmt(v) } } },
-    },
-  });
-}
-
-function renderMonthlyChart(m) {
-  const ctx = $("#monthly-chart").getContext("2d");
-  if (monthlyChart) monthlyChart.destroy();
-  monthlyChart = new Chart(ctx, {
-    type: "doughnut",
-    data: {
-      labels: ["Ränta", "Amortering", "Avgift / drift"],
-      datasets: [
-        {
-          data: [m.interest_kr, m.amortization_kr, m.fee_kr],
-          backgroundColor: ["#1a4480", "#2a7f3e", "#b85c00"],
-        },
-      ],
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          callbacks: { label: (ctx) => `${ctx.label}: ${fmt(ctx.parsed)}` },
-        },
-      },
-    },
-  });
-}
-
-// init
 syncFromPriceOrPct();
 renderLiveSummary();

@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Housecalc — Räkna på bolån</title>
   <link rel="stylesheet" href="/static/styles.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
@@ -155,6 +154,35 @@
       </div>
     </section>
 
+    <!-- COMPARE PRICES -->
+    <section class="card compare-houses">
+      <div class="compare-head">
+        <h2>Jämför olika prisnivåer</h2>
+        <button type="button" id="add-compare" class="ghost">+ Lägg till pris</button>
+      </div>
+      <div class="compare-scroll">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Pris</th>
+              <th>Kontantinsats</th>
+              <th>Bolån</th>
+              <th>Lagfart</th>
+              <th>Pantbrev</th>
+              <th>Total kontanter</th>
+              <th>Månadskostnad</th>
+              <th>Efter ränteavdrag</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="compare-body"></tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:0.5rem">
+        Alla rader använder samma kontantinsats% (<span id="cmp-pct-display">10,0%</span>), ränta, amortering och befintliga pantbrev som ovan.
+      </p>
+    </section>
+
     <!-- SECONDARY SETTINGS -->
     <details class="card secondary">
       <summary>Fler inställningar (typ, avgift, befintliga pantbrev, inkomst, källor)</summary>
@@ -175,38 +203,7 @@
         <label>Hushållets bruttoinkomst per år (kr)
           <input type="number" name="gross_household_income_kr_year" value="600000" min="1" />
         </label>
-        <label>Löptid (år)
-          <input type="number" name="loan_term_years" value="50" min="1" />
-        </label>
-      </div>
-
-      <h3 class="ins-h3" style="margin-top:1.25rem">Källor till kontantinsats (valfritt)</h3>
-      <p class="small muted">Om kontantinsatsen kommer från flera ställen kan du lista dem här. Annars använder vi reglaget ovan.</p>
-      <div id="hp-rows"></div>
-      <button type="button" id="add-hp" class="ghost">+ Lägg till källa</button>
-    </details>
-
-    <!-- WAIT-AND-INVEST -->
-    <details class="card wait-section" open>
-      <summary><h2 style="display:inline; margin:0">Vänta och investera istället?</h2></summary>
-      <p class="muted" style="margin-top:0.5rem">Vad händer om du sparar pengarna i aktier i en period och köper sedan?</p>
-      <div class="secondary-grid">
-        <label>Väntetid (månader)
-          <input type="number" name="wait_months" value="12" min="0" />
-        </label>
-        <label>Månadssparande under väntetiden (kr)
-          <input type="number" name="monthly_savings_kr" value="10000" min="0" />
-        </label>
-        <label>Förväntad aktieavkastning (% / år)
-          <input type="number" step="0.1" name="stock_return_pct" value="7.0" />
-        </label>
-        <label>Förväntad bostadsuppgång (% / år)
-          <input type="number" step="0.1" name="house_appreciation_pct" value="3.0" />
-        </label>
-        <label>Kontantinsats vid framtida köp (%)
-          <input type="number" step="0.5" name="wait_kontantinsats_pct" value="10" min="10" max="100" />
-        </label>
-        <label>Tidshorisont
+        <label>Tidshorisont (insikter)
           <select name="horizon_years">
             <option value="5">5 år</option>
             <option value="10" selected>10 år</option>
@@ -216,25 +213,11 @@
         </label>
       </div>
 
-      <button type="button" id="submit-btn" class="primary">Räkna jämförelsen →</button>
-      <p id="form-error" class="error" hidden></p>
+      <h3 class="ins-h3" style="margin-top:1.25rem">Källor till kontantinsats (valfritt)</h3>
+      <p class="small muted">Om kontantinsatsen kommer från flera ställen kan du lista dem här. Annars använder vi reglaget ovan.</p>
+      <div id="hp-rows"></div>
+      <button type="button" id="add-hp" class="ghost">+ Lägg till källa</button>
     </details>
-
-    <!-- DETAILED COMPARISON RESULTS -->
-    <section class="results-panel" id="results" hidden>
-      <div class="card" id="summary-card">
-        <h2>Sammanfattning: köp nu vs vänta och investera</h2>
-        <div id="summary-body"></div>
-      </div>
-      <div class="card">
-        <h2>Förmögenhet över tid</h2>
-        <canvas id="networth-chart"></canvas>
-      </div>
-      <div class="card">
-        <h2>Månadskostnad — fördelning</h2>
-        <canvas id="monthly-chart"></canvas>
-      </div>
-    </section>
   </main>
   <script src="/static/app.js" defer></script>
 </body>
