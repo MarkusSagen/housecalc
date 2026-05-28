@@ -6,6 +6,11 @@ const fmtMon = (n) =>
   new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(n) +
   " kr/mån";
 
+const fmtThousands = (n) =>
+  new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(n);
+
+const parseDigits = (s) => parseInt(String(s).replace(/\D/g, "") || "0", 10);
+
 const $ = (sel) => document.querySelector(sel);
 const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 
@@ -19,15 +24,43 @@ const rateSlider = $("#rate-slider");
 const amortInput = $("#amort-input");
 const amortSlider = $("#amort-slider");
 const amortMeta = $("#amort-meta");
+const existingPantbrevInput = $("#existing-pantbrev-input");
+const feeInput = $("#fee-input");
 const hpRows = $("#hp-rows");
 
-const feeInput = document.querySelector('[name="monthly_fee_kr"]');
-const existingPantbrevInput = document.querySelector('[name="existing_pantbrev_kr"]');
 const incomeInput = document.querySelector('[name="gross_household_income_kr_year"]');
 const horizonInput = document.querySelector('[name="horizon_years"]');
 
 let suppressSync = false;
 const comparePrices = [];
+
+// ===== Live thousand-separator formatting for text inputs =====
+
+function attachThousandFormatter(input) {
+  input.addEventListener("input", () => {
+    const old = input.value;
+    const cursor = input.selectionStart ?? old.length;
+    const digitsBeforeCursor = old.slice(0, cursor).replace(/\D/g, "").length;
+    const digits = old.replace(/\D/g, "");
+    const formatted = digits ? fmtThousands(+digits) : "";
+    if (formatted === old) return;
+    input.value = formatted;
+    let newCursor = 0;
+    let seen = 0;
+    while (newCursor < formatted.length && seen < digitsBeforeCursor) {
+      if (/\d/.test(formatted[newCursor])) seen++;
+      newCursor++;
+    }
+    input.setSelectionRange(newCursor, newCursor);
+  });
+}
+
+attachThousandFormatter(priceInput);
+attachThousandFormatter(hpInput);
+attachThousandFormatter(existingPantbrevInput);
+attachThousandFormatter(feeInput);
+
+// ===== Calculation =====
 
 function ranteavdragMonthlyCredit(monthlyInterestKr) {
   const annual = monthlyInterestKr * 12;
@@ -69,27 +102,27 @@ function computeForPrice(price, params) {
 }
 
 function readPrimaryParams() {
-  const price = parseInt(priceInput.value || "0", 10);
+  const price = parseDigits(priceInput.value);
   const hpFromSources = readHandpenningSources().reduce(
     (s, x) => s + (x.amount_kr || 0),
     0,
   );
-  const hpTotal = hpFromSources > 0 ? hpFromSources : parseInt(hpInput.value || "0", 10);
+  const hpTotal = hpFromSources > 0 ? hpFromSources : parseDigits(hpInput.value);
   const hpPct = price > 0 ? (hpTotal / price) * 100 : 0;
   return {
     price,
     hpTotal,
     hpPct,
-    existingPantbrev: parseInt(existingPantbrevInput.value || "0", 10),
+    existingPantbrev: parseDigits(existingPantbrevInput.value),
     rate: parseFloat(rateInput.value || "0"),
     amort: parseFloat(amortInput.value || "0"),
-    monthlyFee: parseInt(feeInput.value || "0", 10),
+    monthlyFee: parseDigits(feeInput.value),
     horizonYears: parseInt(horizonInput.value || "10", 10),
     grossIncome: parseInt(incomeInput.value || "0", 10),
   };
 }
 
-// ===== Handpenning sources (optional, in secondary section) =====
+// ===== Handpenning sources =====
 
 function addHandpenningRow(label = "", amount = "") {
   const row = document.createElement("div");
@@ -151,8 +184,20 @@ function renderLiveSummary() {
   const recAmort = recommendedAmortPct(r.ltv, dti);
   amortMeta.textContent = `FI rekommenderar ${recAmort.toFixed(1)}% (LTV-tier${dti > 4.5 ? " + DTI" : ""})`;
 
+  updateSliderProgress();
   renderInsights(p, r, dti);
-  renderCompareTable(p);
+  updateCompareValues(p);
+}
+
+function updateSliderProgress() {
+  // Visual fill on the slider track
+  for (const s of [priceSlider, hpSlider, rateSlider, amortSlider]) {
+    const min = +s.min;
+    const max = +s.max;
+    const val = +s.value;
+    const pct = max > min ? ((val - min) / (max - min)) * 100 : 0;
+    s.style.setProperty("--progress", `${pct}%`);
+  }
 }
 
 function renderInsights(p, r, dti) {
@@ -229,94 +274,127 @@ function renderInsights(p, r, dti) {
     .join("");
 }
 
-// ===== Compare prices table =====
+// ===== Compare prices: structure built once per add/remove, values updated on render =====
 
-function renderCompareTable(primary) {
-  $("#cmp-pct-display").textContent = `${primary.hpPct.toFixed(1)}%`;
-
+function buildCompareTable() {
   const rows = [];
-
-  rows.push({ price: primary.price, isCurrent: true, idx: -1 });
-  comparePrices.forEach((price, idx) => rows.push({ price, isCurrent: false, idx }));
-  rows.sort((a, b) => b.price - a.price);
-
-  $("#compare-body").innerHTML = rows
-    .map((row) => {
-      const c = computeForPrice(row.price, primary);
-      const priceCell = row.isCurrent
-        ? `<strong>${fmt(row.price)}</strong><div class="small muted">nuvarande</div>`
-        : `<input type="number" class="compare-price-input" data-idx="${row.idx}" value="${row.price}" min="1" step="10000" />`;
-      const removeCell = row.isCurrent
-        ? ""
-        : `<button type="button" class="compare-remove" data-idx="${row.idx}" aria-label="Ta bort">×</button>`;
-      return `<tr class="${row.isCurrent ? "current" : ""}">
-        <td>${priceCell}</td>
-        <td>${fmt(c.hpTotal)} <span class="muted small">(${primary.hpPct.toFixed(1)}%)</span></td>
-        <td>${fmt(c.loan)}</td>
-        <td>${fmt(c.lagfart)}</td>
-        <td>${fmt(c.pantbrev)}</td>
-        <td><strong>${fmt(c.onetimeTotal)}</strong></td>
-        <td>${fmt(c.monthlyTotal)}/mån</td>
-        <td>${fmt(c.monthlyAfterTax)}/mån</td>
-        <td>${removeCell}</td>
-      </tr>`;
-    })
-    .join("");
+  rows.push(`<tr class="current" data-row="current">
+    <td>
+      <strong class="cmp-price-text">— kr</strong>
+      <div class="small muted">nuvarande</div>
+    </td>
+    <td class="cmp-hp">—</td>
+    <td class="cmp-loan">—</td>
+    <td class="cmp-lagfart">—</td>
+    <td class="cmp-pantbrev">—</td>
+    <td class="cmp-total"><strong>—</strong></td>
+    <td class="cmp-monthly">—</td>
+    <td class="cmp-aftertax">—</td>
+    <td></td>
+  </tr>`);
+  comparePrices.forEach((price, idx) => {
+    rows.push(`<tr data-row="${idx}">
+      <td>
+        <input type="text" inputmode="numeric" class="compare-price-input"
+               data-idx="${idx}" value="${fmtThousands(price)}" />
+        <span class="control-unit small">kr</span>
+      </td>
+      <td class="cmp-hp">—</td>
+      <td class="cmp-loan">—</td>
+      <td class="cmp-lagfart">—</td>
+      <td class="cmp-pantbrev">—</td>
+      <td class="cmp-total"><strong>—</strong></td>
+      <td class="cmp-monthly">—</td>
+      <td class="cmp-aftertax">—</td>
+      <td><button type="button" class="compare-remove" data-idx="${idx}" aria-label="Ta bort">×</button></td>
+    </tr>`);
+  });
+  $("#compare-body").innerHTML = rows.join("");
 
   $$(".compare-price-input").forEach((inp) => {
+    attachThousandFormatter(inp);
     inp.addEventListener("input", () => {
       const idx = parseInt(inp.dataset.idx, 10);
-      comparePrices[idx] = parseInt(inp.value || "0", 10);
-      renderLiveSummary();
+      comparePrices[idx] = parseDigits(inp.value);
+      updateCompareValues(readPrimaryParams());
     });
   });
   $$(".compare-remove").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = parseInt(btn.dataset.idx, 10);
       comparePrices.splice(idx, 1);
+      buildCompareTable();
       renderLiveSummary();
     });
   });
 }
 
+function updateCompareValues(primary) {
+  $("#cmp-pct-display").textContent = `${primary.hpPct.toFixed(1)}%`;
+  const tbody = $("#compare-body");
+  Array.from(tbody.children).forEach((tr) => {
+    const rowType = tr.dataset.row;
+    let price;
+    if (rowType === "current") {
+      price = primary.price;
+      tr.querySelector(".cmp-price-text").textContent = fmt(price);
+    } else {
+      const idx = parseInt(rowType, 10);
+      price = comparePrices[idx] ?? 0;
+    }
+    const c = computeForPrice(price, primary);
+    tr.querySelector(".cmp-hp").innerHTML =
+      `${fmt(c.hpTotal)} <span class="muted small">(${primary.hpPct.toFixed(1)}%)</span>`;
+    tr.querySelector(".cmp-loan").textContent = fmt(c.loan);
+    tr.querySelector(".cmp-lagfart").textContent = fmt(c.lagfart);
+    tr.querySelector(".cmp-pantbrev").textContent = fmt(c.pantbrev);
+    tr.querySelector(".cmp-total").innerHTML = `<strong>${fmt(c.onetimeTotal)}</strong>`;
+    tr.querySelector(".cmp-monthly").textContent = `${fmt(c.monthlyTotal)}/mån`;
+    tr.querySelector(".cmp-aftertax").textContent = `${fmt(c.monthlyAfterTax)}/mån`;
+  });
+}
+
 // ===== Slider/input bidirectional sync =====
 
-function bindPair(slider, input, opts = {}) {
-  slider.addEventListener("input", () => {
+function syncPriceFromSlider() {
+  suppressSync = true;
+  priceInput.value = fmtThousands(+priceSlider.value);
+  suppressSync = false;
+  syncFromPriceOrPct();
+  renderLiveSummary();
+}
+
+function syncPriceFromInput() {
+  if (suppressSync) return;
+  const v = parseDigits(priceInput.value);
+  if (Number.isFinite(v)) {
     suppressSync = true;
-    input.value = slider.value;
+    priceSlider.value = Math.min(+priceSlider.max, Math.max(+priceSlider.min, v));
     suppressSync = false;
-    if (opts.afterSlider) opts.afterSlider();
-    renderLiveSummary();
-  });
-  input.addEventListener("input", () => {
-    if (suppressSync) return;
-    const v = +input.value;
-    if (Number.isFinite(v)) {
-      suppressSync = true;
-      slider.value = Math.min(+slider.max, Math.max(+slider.min, v));
-      suppressSync = false;
-    }
-    if (opts.afterInput) opts.afterInput();
-    renderLiveSummary();
-  });
+  }
+  syncFromPriceOrPct();
+  renderLiveSummary();
 }
 
 function syncFromPriceOrPct() {
   if (suppressSync) return;
-  const price = +priceInput.value || 0;
+  const price = parseDigits(priceInput.value);
   const pct = +hpSlider.value;
   const newAmount = Math.round((price * pct) / 100);
   suppressSync = true;
-  hpInput.value = newAmount;
+  hpInput.value = fmtThousands(newAmount);
   suppressSync = false;
+}
+
+function syncHpSlider() {
+  syncFromPriceOrPct();
   renderLiveSummary();
 }
 
 function syncFromHpAmount() {
   if (suppressSync) return;
-  const price = +priceInput.value || 0;
-  const amount = +hpInput.value || 0;
+  const price = parseDigits(priceInput.value);
+  const amount = parseDigits(hpInput.value);
   const pct = price > 0 ? (amount / price) * 100 : 0;
   suppressSync = true;
   hpSlider.value = Math.min(50, Math.max(0, pct));
@@ -324,35 +402,82 @@ function syncFromHpAmount() {
   renderLiveSummary();
 }
 
-bindPair(priceSlider, priceInput, {
-  afterSlider: syncFromPriceOrPct,
-  afterInput: syncFromPriceOrPct,
-});
-hpSlider.addEventListener("input", syncFromPriceOrPct);
+function syncRateSlider() {
+  suppressSync = true;
+  rateInput.value = (+rateSlider.value).toFixed(2);
+  suppressSync = false;
+  renderLiveSummary();
+}
+function syncRateInput() {
+  if (suppressSync) return;
+  const v = +rateInput.value;
+  if (Number.isFinite(v)) {
+    suppressSync = true;
+    rateSlider.value = Math.min(+rateSlider.max, Math.max(+rateSlider.min, v));
+    suppressSync = false;
+  }
+  renderLiveSummary();
+}
+function syncAmortSlider() {
+  suppressSync = true;
+  amortInput.value = (+amortSlider.value).toFixed(1);
+  suppressSync = false;
+  renderLiveSummary();
+}
+function syncAmortInput() {
+  if (suppressSync) return;
+  const v = +amortInput.value;
+  if (Number.isFinite(v)) {
+    suppressSync = true;
+    amortSlider.value = Math.min(+amortSlider.max, Math.max(+amortSlider.min, v));
+    suppressSync = false;
+  }
+  renderLiveSummary();
+}
+
+priceSlider.addEventListener("input", syncPriceFromSlider);
+priceInput.addEventListener("input", syncPriceFromInput);
+hpSlider.addEventListener("input", syncHpSlider);
 hpInput.addEventListener("input", syncFromHpAmount);
-bindPair(rateSlider, rateInput);
-bindPair(amortSlider, amortInput);
+rateSlider.addEventListener("input", syncRateSlider);
+rateInput.addEventListener("input", syncRateInput);
+amortSlider.addEventListener("input", syncAmortSlider);
+amortInput.addEventListener("input", syncAmortInput);
 
 $$(".rate-preset").forEach((btn) => {
   btn.addEventListener("click", () => {
-    rateInput.value = btn.dataset.rate;
+    suppressSync = true;
+    rateInput.value = (+btn.dataset.rate).toFixed(2);
     rateSlider.value = btn.dataset.rate;
+    suppressSync = false;
     renderLiveSummary();
   });
 });
 
-[feeInput, existingPantbrevInput, incomeInput, horizonInput].forEach((el) =>
+[existingPantbrevInput, feeInput].forEach((el) =>
+  el.addEventListener("input", renderLiveSummary),
+);
+[incomeInput, horizonInput].forEach((el) =>
   el.addEventListener("input", renderLiveSummary),
 );
 
 $("#add-hp").addEventListener("click", () => addHandpenningRow());
 
 $("#add-compare").addEventListener("click", () => {
-  const current = parseInt(priceInput.value || "0", 10);
+  const current = parseDigits(priceInput.value);
   const suggestion = Math.round((current * 1.1) / 10000) * 10000;
   comparePrices.push(suggestion);
+  buildCompareTable();
   renderLiveSummary();
+  const inputs = $$(".compare-price-input");
+  const last = inputs[inputs.length - 1];
+  if (last) {
+    last.focus();
+    last.select();
+  }
 });
 
+// init
+buildCompareTable();
 syncFromPriceOrPct();
 renderLiveSummary();

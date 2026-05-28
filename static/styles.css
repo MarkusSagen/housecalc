@@ -202,64 +202,90 @@ small.muted { display: block; margin-top: 0.25rem; font-size: 0.78rem; line-heig
   padding: 0.35rem 0.6rem;
   border: 1px solid var(--border);
 }
-.control-value input[type="number"] {
-  width: 7.5rem;
+.control-value input {
+  width: 9rem;
   border: none;
   background: transparent;
   padding: 0;
   margin: 0;
-  font-size: 1.05rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   text-align: right;
   font-variant-numeric: tabular-nums;
   color: var(--text);
   outline: none;
+  letter-spacing: -0.01em;
 }
 .control-value input[type="number"]::-webkit-outer-spin-button,
 .control-value input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .control-value input[type="number"] { -moz-appearance: textfield; }
 .control-unit { color: var(--muted); font-size: 0.9rem; }
 
+.control-row-input { gap: 0.3rem; }
+.control-row-input small.muted { font-size: 0.78rem; }
+
 /* Range slider styling */
 input[type="range"].slider {
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 6px;
-  border-radius: 3px;
-  background: linear-gradient(to right, var(--accent) 0%, var(--accent) var(--progress, 0%), var(--border) var(--progress, 0%), var(--border) 100%);
+  height: 10px;
+  border-radius: 6px;
+  background: linear-gradient(
+    to right,
+    var(--accent) 0%,
+    var(--accent) var(--progress, 0%),
+    #d8dde4 var(--progress, 0%),
+    #d8dde4 100%
+  );
   outline: none;
   cursor: pointer;
-  margin: 0;
+  margin: 0.5rem 0 0;
   padding: 0;
 }
 input[type="range"].slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: white;
-  border: 3px solid var(--accent);
+  border: 4px solid var(--accent);
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(20, 40, 80, 0.2);
+  box-shadow: 0 2px 6px rgba(20, 40, 80, 0.25);
+  transition: transform 0.08s;
 }
+input[type="range"].slider::-webkit-slider-thumb:hover { transform: scale(1.08); }
 input[type="range"].slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: white;
-  border: 3px solid var(--accent);
+  border: 4px solid var(--accent);
   cursor: pointer;
-  box-shadow: 0 1px 4px rgba(20, 40, 80, 0.2);
+  box-shadow: 0 2px 6px rgba(20, 40, 80, 0.25);
 }
 
 .slider-marks {
   display: flex;
   justify-content: space-between;
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   color: var(--muted);
-  margin-top: 0.15rem;
+  margin-top: 0.4rem;
+  padding: 0 0.5rem;
+  position: relative;
+}
+.slider-marks span {
+  position: relative;
+  text-align: center;
+}
+.slider-marks span::before {
+  content: "";
+  display: block;
+  width: 2px;
+  height: 6px;
+  background: var(--border);
+  margin: 0 auto 0.2rem;
 }
 
 .rate-presets { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.35rem; }
@@ -383,15 +409,19 @@ input[type="range"].slider::-moz-range-thumb {
   border-left: 3px solid var(--accent); padding-left: 0.5rem;
 }
 .compare-price-input {
-  width: 7rem;
-  padding: 0.3rem 0.5rem;
+  width: 8rem;
+  padding: 0.35rem 0.55rem;
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
   text-align: right;
   background: white;
+  outline: none;
 }
+.compare-price-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
+.cmp-price-text { font-size: 1rem; }
 .compare-remove {
   background: transparent;
   color: var(--bad);
