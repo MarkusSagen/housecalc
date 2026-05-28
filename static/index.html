@@ -3,170 +3,226 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Housecalc — Köpa hus i Sverige?</title>
+  <title>Housecalc — Räkna på bolån</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Housecalc</h1>
-    <p class="tagline">Köpa nu eller spara och vänta?</p>
+    <div class="header-inner">
+      <h1>Housecalc</h1>
+      <p class="tagline">Räkna på köp av bostad i Sverige</p>
+    </div>
   </header>
 
   <main>
-    <section class="form-panel">
-      <div class="card live-summary" id="live-summary">
-        <h2>Snabb sammanfattning</h2>
-        <div class="ls-rows">
-          <div class="ls-row"><span>Förväntat slutpris</span><strong id="ls-price">— kr</strong></div>
-          <div class="ls-row"><span>Kontantinsats (<span id="ls-hp-pct">—</span>)</span><strong id="ls-handpenning">— kr</strong></div>
-          <div class="ls-row"><span>Bolån (LTV <span id="ls-ltv">—</span>)</span><strong id="ls-loan">— kr</strong></div>
-          <div class="ls-row"><span>Lagfart (1,5% + 825 kr)</span><strong id="ls-lagfart">— kr</strong></div>
-          <div class="ls-row"><span>Pantbrev (2% + 375 kr)</span><strong id="ls-pantbrev">— kr</strong></div>
-          <div class="ls-divider"></div>
-          <div class="ls-row total"><span>Total kontanter du behöver</span><strong id="ls-total-cash">— kr</strong></div>
-          <div class="ls-divider"></div>
-          <div class="ls-row"><span>Ränta (<span id="ls-rate-pct">—</span>)</span><strong id="ls-monthly-interest">— kr/mån</strong></div>
-          <div class="ls-row"><span>Amortering (<span id="ls-amort-pct">—</span>)</span><strong id="ls-monthly-amort">— kr/mån</strong></div>
-          <div class="ls-row"><span>Avgift / drift</span><strong id="ls-monthly-fee">— kr/mån</strong></div>
-          <div class="ls-divider"></div>
-          <div class="ls-row total"><span>Månadskostnad före skatteavdrag</span><strong id="ls-monthly-total">— kr/mån</strong></div>
-          <div class="ls-row good"><span>Efter ränteavdrag</span><strong id="ls-monthly-aftertax">— kr/mån</strong></div>
-        </div>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-headline">
+        <div class="hero-label">Din kommande månadsutgift</div>
+        <div class="hero-value" id="hero-monthly">— kr</div>
+        <div class="hero-sub">Efter ränteavdrag: <strong id="hero-monthly-after">— kr</strong></div>
       </div>
 
-      <div class="card insights" id="insights">
-        <h2>Insikter</h2>
-        <p>Om <strong><span id="ins-horizon">10</span> år</strong> har du amorterat <strong id="ins-amort-total">— kr</strong> på lånet.</p>
-        <p id="ins-tier-drop-row" hidden>Amorteringskravet sjunker till 1% om <strong id="ins-tier-drop-years">— år</strong> (när LTV når 70%, utan värdestegring).</p>
-        <p id="ins-dti-row" hidden>Lånet är <strong id="ins-dti">—</strong> hushållets bruttoinkomst.<span id="ins-dti-extra"></span></p>
+      <div class="hero-cards">
+        <div class="hero-card">
+          <h3>Månadskostnad</h3>
+          <div class="hc-row"><span>Ränta</span><strong id="hc-interest">— kr</strong></div>
+          <div class="hc-row"><span>Amortering</span><strong id="hc-amort">— kr</strong></div>
+          <div class="hc-row"><span>Avgift / drift</span><strong id="hc-fee">— kr</strong></div>
+          <div class="hc-row hc-total"><span>Totalt före skatt</span><strong id="hc-total">— kr</strong></div>
+        </div>
+        <div class="hero-card">
+          <h3>Engångskostnader</h3>
+          <div class="hc-row"><span>Lagfart</span><strong id="hc-lagfart">— kr</strong></div>
+          <div class="hc-row"><span>Pantbrev</span><strong id="hc-pantbrev">— kr</strong></div>
+          <div class="hc-row"><span>Kontantinsats</span><strong id="hc-kontantinsats">— kr</strong></div>
+          <div class="hc-row hc-total"><span>Totalt</span><strong id="hc-onetime-total">— kr</strong></div>
+        </div>
+        <div class="hero-card hero-card-cash">
+          <h3>Du behöver i kontanter</h3>
+          <div class="hc-cash" id="hc-total-cash">— kr</div>
+          <div class="hc-row"><span>Bolån</span><strong id="hc-loan">— kr</strong></div>
+          <div class="hc-row"><span>LTV (belåningsgrad)</span><strong id="hc-ltv">—</strong></div>
+        </div>
+      </div>
+    </section>
 
-        <h3 class="ins-h3">Vad händer om du lägger mer i kontantinsats?</h3>
+    <!-- CONTROLS -->
+    <section class="controls">
+      <h2>Justera</h2>
+      <div class="control-grid">
+        <div class="control">
+          <div class="control-head">
+            <label for="price-input">Förväntat slutpris</label>
+            <div class="control-value">
+              <input type="number" id="price-input" value="3000000" min="1" step="10000" />
+              <span class="control-unit">kr</span>
+            </div>
+          </div>
+          <input type="range" class="slider" id="price-slider" min="500000" max="20000000" step="50000" value="3000000" />
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="hp-input">Kontantinsats <span class="control-meta" id="hp-meta">10,0% av priset</span></label>
+            <div class="control-value">
+              <input type="number" id="hp-input" value="300000" min="0" step="10000" />
+              <span class="control-unit">kr</span>
+            </div>
+          </div>
+          <input type="range" class="slider" id="hp-slider" min="0" max="50" step="0.5" value="10" />
+          <div class="slider-marks"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="rate-input">Ränta</label>
+            <div class="control-value">
+              <input type="number" id="rate-input" value="3.0" step="0.01" min="0" max="15" />
+              <span class="control-unit">%</span>
+            </div>
+          </div>
+          <input type="range" class="slider" id="rate-slider" min="0" max="10" step="0.05" value="3.0" />
+          <div class="rate-presets">
+            <button type="button" class="rate-preset" data-rate="2.95">SBAB 3 mån 2,95%</button>
+            <button type="button" class="rate-preset" data-rate="3.00">Booli 3,00%</button>
+            <button type="button" class="rate-preset" data-rate="3.50">3 år bunden 3,50%</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="amort-input">Amortering <span class="control-meta" id="amort-meta">—</span></label>
+            <div class="control-value">
+              <input type="number" id="amort-input" value="2.0" step="0.1" min="0" max="10" />
+              <span class="control-unit">%</span>
+            </div>
+          </div>
+          <input type="range" class="slider" id="amort-slider" min="0" max="5" step="0.1" value="2.0" />
+        </div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="insights-row">
+      <div class="insight-card">
+        <div class="insight-label">Om <strong><span id="ins-horizon">10</span> år</strong> har du amorterat</div>
+        <div class="insight-value" id="ins-amort-total">— kr</div>
+        <div class="insight-sub">på lånet på din bostad.</div>
+      </div>
+      <div class="insight-card" id="ins-tier-drop-card" hidden>
+        <div class="insight-label">Amorteringskravet sjunker om</div>
+        <div class="insight-value" id="ins-tier-drop-years">— år</div>
+        <div class="insight-sub">till 1% enligt nuvarande amortering (utan värdestegring).</div>
+      </div>
+      <div class="insight-card" id="ins-dti-card" hidden>
+        <div class="insight-label">Skuldkvot</div>
+        <div class="insight-value" id="ins-dti">—×</div>
+        <div class="insight-sub" id="ins-dti-extra">—</div>
+      </div>
+    </section>
+
+    <!-- TIER + STRESS TABLES -->
+    <section class="tables-row">
+      <div class="card">
+        <h2>Vad händer om du lägger mer i kontantinsats?</h2>
         <table class="tier-table">
           <thead>
             <tr><th>Kontantinsats</th><th>LTV</th><th>Amortering/mån</th></tr>
           </thead>
           <tbody id="tier-table-body"></tbody>
         </table>
-        <p class="small muted" style="margin-top:0.5rem">Finansinspektionens nivåer: &gt;70% LTV = 2%, 50–70% = 1%, ≤50% = 0%. Plus +1% om lånet är &gt; 4,5× årsinkomsten.</p>
+        <p class="small muted" style="margin-top:0.5rem">FI:s nivåer: &gt;70% LTV = 2%, 50–70% = 1%, ≤50% = 0%. Plus +1% om lånet är &gt; 4,5× årsinkomsten.</p>
+      </div>
 
-        <h3 class="ins-h3">Stresstest: om räntan stiger</h3>
+      <div class="card">
+        <h2>Stresstest: om räntan stiger</h2>
         <table class="tier-table">
           <thead>
             <tr><th>Ränta</th><th>Månadskostnad</th><th>Efter ränteavdrag</th></tr>
           </thead>
           <tbody id="stress-body"></tbody>
         </table>
+        <p class="small muted" style="margin-top:0.5rem">Behåll samma amortering — bara räntan ändras.</p>
       </div>
-
-      <form id="calc-form">
-        <fieldset>
-          <legend>Bostad</legend>
-          <label>Pris (kr)
-            <input type="number" name="price_kr" value="3000000" min="1" required />
-          </label>
-          <label>Typ
-            <select name="housing_type">
-              <option value="brf">Bostadsrätt</option>
-              <option value="villa">Villa</option>
-            </select>
-          </label>
-          <label>Avgift / drift per månad (kr)
-            <input type="number" name="monthly_fee_kr" value="4500" min="0" required />
-          </label>
-          <label>Befintliga pantbrev (kr)
-            <input type="number" name="existing_pantbrev_kr" value="0" min="0" />
-            <small class="muted">Du kan ta över säljarens befintliga pantbrev. Du betalar bara stämpelskatt (2%) på de <em>nya</em> pantbrev som behövs för att täcka hela lånet. Anges på bostadsannonsen.</small>
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Handpenning <span id="hp-status"></span></legend>
-          <div id="hp-rows"></div>
-          <button type="button" id="add-hp">+ Lägg till källa</button>
-        </fieldset>
-
-        <fieldset>
-          <legend>Lån</legend>
-          <label>Ränta (%)
-            <input type="number" step="0.01" name="interest_rate_pct" value="3.0" min="0" required />
-          </label>
-          <div class="rate-presets">
-            <span>Snabbval:</span>
-            <button type="button" class="rate-preset" data-rate="2.95">SBAB 3 mån 2,95%</button>
-            <button type="button" class="rate-preset" data-rate="3.00">Booli 3,00%</button>
-            <button type="button" class="rate-preset" data-rate="3.50">3 år bunden 3,50%</button>
-          </div>
-          <label style="margin-top:1rem">Amortering (%)
-            <input type="number" step="0.1" name="amortization_rate_pct" value="2.0" min="0" required />
-            <small class="muted">Sätts oftast automatiskt av banken efter LTV (se Insikter).</small>
-          </label>
-          <label>Löptid (år)
-            <input type="number" name="loan_term_years" value="50" min="1" required />
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Vänta och investera</legend>
-          <label>Väntetid (månader)
-            <input type="number" name="wait_months" value="12" min="0" required />
-          </label>
-          <label>Månadssparande under väntetiden (kr)
-            <input type="number" name="monthly_savings_kr" value="10000" min="0" required />
-          </label>
-          <label>Förväntad aktieavkastning (% / år)
-            <input type="number" step="0.1" name="stock_return_pct" value="7.0" required />
-          </label>
-          <label>Förväntad bostadsuppgång (% / år)
-            <input type="number" step="0.1" name="house_appreciation_pct" value="3.0" required />
-          </label>
-          <label>Kontantinsats vid framtida köp (%)
-            <input type="number" step="0.5" name="wait_kontantinsats_pct" value="10" min="10" max="100" required />
-            <small style="color:#5b6776">10% = samma lånekvot. Högre = mindre lån men mindre kvar i aktier.</small>
-          </label>
-        </fieldset>
-
-        <fieldset>
-          <legend>Jämförelse</legend>
-          <label>Tidshorisont
-            <select name="horizon_years">
-              <option value="5">5 år</option>
-              <option value="10" selected>10 år</option>
-              <option value="20">20 år</option>
-              <option value="30">30 år</option>
-            </select>
-          </label>
-          <label>Hushållets bruttoinkomst per år (kr)
-            <input type="number" name="gross_household_income_kr_year" value="600000" min="1" required />
-          </label>
-        </fieldset>
-
-        <button type="submit" id="submit-btn">Räkna ut</button>
-        <p id="form-error" class="error" hidden></p>
-      </form>
     </section>
 
+    <!-- SECONDARY SETTINGS -->
+    <details class="card secondary">
+      <summary>Fler inställningar (typ, avgift, befintliga pantbrev, inkomst, källor)</summary>
+      <div class="secondary-grid">
+        <label>Typ
+          <select name="housing_type">
+            <option value="brf">Bostadsrätt</option>
+            <option value="villa">Villa</option>
+          </select>
+        </label>
+        <label>Avgift / drift per månad (kr)
+          <input type="number" name="monthly_fee_kr" value="4500" min="0" />
+        </label>
+        <label>Befintliga pantbrev (kr)
+          <input type="number" name="existing_pantbrev_kr" value="0" min="0" />
+          <small class="muted">Anges på bostadsannonsen. Du tar över säljarens pantbrev — du betalar bara stämpelskatt på <em>nya</em> pantbrev.</small>
+        </label>
+        <label>Hushållets bruttoinkomst per år (kr)
+          <input type="number" name="gross_household_income_kr_year" value="600000" min="1" />
+        </label>
+        <label>Löptid (år)
+          <input type="number" name="loan_term_years" value="50" min="1" />
+        </label>
+      </div>
+
+      <h3 class="ins-h3" style="margin-top:1.25rem">Källor till kontantinsats (valfritt)</h3>
+      <p class="small muted">Om kontantinsatsen kommer från flera ställen kan du lista dem här. Annars använder vi reglaget ovan.</p>
+      <div id="hp-rows"></div>
+      <button type="button" id="add-hp" class="ghost">+ Lägg till källa</button>
+    </details>
+
+    <!-- WAIT-AND-INVEST -->
+    <details class="card wait-section" open>
+      <summary><h2 style="display:inline; margin:0">Vänta och investera istället?</h2></summary>
+      <p class="muted" style="margin-top:0.5rem">Vad händer om du sparar pengarna i aktier i en period och köper sedan?</p>
+      <div class="secondary-grid">
+        <label>Väntetid (månader)
+          <input type="number" name="wait_months" value="12" min="0" />
+        </label>
+        <label>Månadssparande under väntetiden (kr)
+          <input type="number" name="monthly_savings_kr" value="10000" min="0" />
+        </label>
+        <label>Förväntad aktieavkastning (% / år)
+          <input type="number" step="0.1" name="stock_return_pct" value="7.0" />
+        </label>
+        <label>Förväntad bostadsuppgång (% / år)
+          <input type="number" step="0.1" name="house_appreciation_pct" value="3.0" />
+        </label>
+        <label>Kontantinsats vid framtida köp (%)
+          <input type="number" step="0.5" name="wait_kontantinsats_pct" value="10" min="10" max="100" />
+        </label>
+        <label>Tidshorisont
+          <select name="horizon_years">
+            <option value="5">5 år</option>
+            <option value="10" selected>10 år</option>
+            <option value="20">20 år</option>
+            <option value="30">30 år</option>
+          </select>
+        </label>
+      </div>
+
+      <button type="button" id="submit-btn" class="primary">Räkna jämförelsen →</button>
+      <p id="form-error" class="error" hidden></p>
+    </details>
+
+    <!-- DETAILED COMPARISON RESULTS -->
     <section class="results-panel" id="results" hidden>
       <div class="card" id="summary-card">
-        <h2>Sammanfattning</h2>
+        <h2>Sammanfattning: köp nu vs vänta och investera</h2>
         <div id="summary-body"></div>
       </div>
-
-      <div class="card">
-        <h2>Engångskostnader (Köp nu)</h2>
-        <table id="one-time-table"></table>
-      </div>
-
-      <div class="card">
-        <h2>Månadskostnad (Köp nu)</h2>
-        <table id="monthly-table"></table>
-      </div>
-
       <div class="card">
         <h2>Förmögenhet över tid</h2>
         <canvas id="networth-chart"></canvas>
       </div>
-
       <div class="card">
         <h2>Månadskostnad — fördelning</h2>
         <canvas id="monthly-chart"></canvas>
