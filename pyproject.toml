@@ -1,7 +1,7 @@
 [project]
 name = "housecalc"
 version = "0.1.0"
-description = "Swedish home purchase calculator: buy now vs. wait and invest"
+description = "Swedish home purchase calculator: live monthly cost, FI tiers, payoff timeline"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [

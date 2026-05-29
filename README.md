@@ -1,9 +1,10 @@
 # Housecalc
 
-Swedish home-purchase calculator. Compare buying a house now vs. waiting and
-investing the down payment in stocks. Models handpenning as a list of named
-sources, applies Swedish rules (90% LTV cap, 2% default amortization, 1.5%
-stämpelskatt, 2% pantbrev, ränteavdrag 30/21%).
+Swedish home-purchase calculator. Live single-page UI that shows the true monthly
+cost of a mortgage (with ränteavdrag), one-time costs (stämpelskatt, pantbrev,
+lagfart), the impact of FI's amortization tiers, a rate-stress table, a
+multi-price compare table, and a payoff timeline that auto-steps amortization
+down across LTV tiers.
 
 Output matches Booli/SBAB to the krona for typical Swedish purchases.
 
@@ -12,19 +13,36 @@ Output matches Booli/SBAB to the krona for typical Swedish purchases.
     uv sync
     uv run uvicorn app.main:app --reload
 
-Open http://127.0.0.1:8000/.
+Open http://127.0.0.1:8000/. All calculations happen client-side in
+`static/app.js`; the backend only serves static files.
 
 ## Test
 
     uv run pytest
 
+(Two smoke tests verifying static files are served. The calculator math itself
+lives in `static/app.js` and is verified visually against Booli/SBAB.)
+
 ## Layout
 
-- `app/calculator.py` — pure calculation functions (TDD-covered).
-- `app/models.py` — Pydantic models.
-- `app/main.py` — FastAPI app + `POST /api/calculate`.
-- `static/` — HTML, CSS, JS frontend (no build step).
+- `app/main.py` — FastAPI static-file server (one route: `GET /`).
+- `static/index.html` — single-page UI.
+- `static/app.js` — sliders, live recompute, FI tier rules, payoff chart.
+- `static/styles.css` — Booli-style layout.
 
-## Design
+## Rules encoded in the UI
 
-See `docs/superpowers/specs/2026-05-13-housecalc-design.md`.
+| Rule | Value | Source |
+|------|-------|--------|
+| LTV cap (bolånetak) | 90% — regulatory rule; UI defaults to 10% kontantinsats but does not enforce | Finansinspektionen |
+| Amortization (FI tiers) | LTV >70% = 2%, 50% < LTV ≤ 70% = 1%, LTV ≤50% = 0%; +1% if loan > 4.5× årsinkomst | Finansinspektionen |
+| Stämpelskatt (lagfart) | 1.5% of purchase price | Lantmäteriet |
+| Pantbrev stamp duty | 2% of *new* pantbrev + 375 kr | Lantmäteriet |
+| Lagfart fee | 825 kr | Lantmäteriet |
+| Ränteavdrag | 30% on first 100 000 kr, 21% beyond | Skatteverket |
+
+## Design history
+
+See `docs/superpowers/specs/2026-05-13-housecalc-design.md` for the original
+buy-vs-wait spec. The shipped UI diverged (no wait-and-invest scenario, no
+backend math) — this README is the source of truth for what actually runs.
