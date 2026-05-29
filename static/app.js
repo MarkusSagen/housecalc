@@ -280,22 +280,12 @@ function renderInsights(p, r, dti) {
 
 // ===== Payoff projection =====
 
-function ltvTierAmortPct(ltvPct, dti) {
-  let pct = 0;
-  if (ltvPct > 70) pct = 2;
-  else if (ltvPct > 50) pct = 1;
-  if (dti > 4.5) pct += 1;
-  return pct;
-}
-
 function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, maxYears = 50) {
   const fiSeries = [];
   const voluntarySeries = [];
   let remainingFi = initialLoan;
   let remainingVol = initialLoan;
   let houseValue = initialPrice;
-  let totalInterestFi = 0;
-  let totalInterestVol = 0;
 
   let yearTier1 = null;
   let yearTier0 = null;
@@ -313,12 +303,10 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
 
     // FI track
     const ltvFi = (remainingFi / houseValue) * 100;
-    const amortPctFi = ltvTierAmortPct(ltvFi, dti);
+    const amortPctFi = recommendedAmortPct(ltvFi, dti);
     const annualAmortFi = (amortPctFi / 100) * initialLoan;
-    const interestFi = remainingFi * (rate / 100);
     const paidFi = Math.min(annualAmortFi, remainingFi);
     remainingFi = Math.max(0, remainingFi - paidFi);
-    totalInterestFi += interestFi;
 
     if (yearTier1 === null && ltvFi <= 70) yearTier1 = year;
     if (yearTier0 === null && ltvFi <= 50) yearTier0 = year;
@@ -327,10 +315,8 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
     fiSeries.push({ year, remaining: remainingFi, ltv: ltvFi });
 
     // Voluntary 2% track
-    const interestVol = remainingVol * (rate / 100);
     const paidVol = Math.min(voluntaryAnnualAmort, remainingVol);
     remainingVol = Math.max(0, remainingVol - paidVol);
-    totalInterestVol += interestVol;
     if (yearPaidOffVol === null && remainingVol <= 0) yearPaidOffVol = year;
 
     voluntarySeries.push({ year, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });

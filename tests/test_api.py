@@ -56,5 +56,4 @@ def test_calculate_endpoint_returns_422_on_stocks_shortfall():
 
 def test_static_index_served():
     response = client.get("/")
-    # Will fail until static/index.html exists; for now, accept 404 or 200
-    assert response.status_code in (200, 404)
+    assert response.status_code == 200

@@ -29,7 +29,7 @@ def compute_one_time_costs(
     pantbrev_cost = (
         round(PANTBREV_RATE * new_pantbrev) + PANTBREV_FEE_KR if new_pantbrev > 0 else 0
     )
-    lagfart_fee = LAGFART_FEE_KR if loan_kr > 0 or price_kr > 0 else 0
+    lagfart_fee = LAGFART_FEE_KR if price_kr > 0 else 0
     total = kontantinsats + stamp_duty + pantbrev_cost + lagfart_fee
     return OneTimeCosts(
         kontantinsats_kr=kontantinsats,
