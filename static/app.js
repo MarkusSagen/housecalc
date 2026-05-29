@@ -322,6 +322,12 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
     voluntarySeries.push({ year, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });
   }
 
+  // Sum interest for years 1..30 using each year's start-of-year balance
+  // (= the prior year's remaining). Approximation: ignores intra-year amortization.
+  const totalInterestFi30 = fiSeries
+    .slice(0, 30)
+    .reduce((sum, snapshot) => sum + snapshot.remaining * (rate / 100), 0);
+
   return {
     fiSeries,
     voluntarySeries,
@@ -329,11 +335,7 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
     yearTier0,
     yearPaidOffFi,
     yearPaidOffVol,
-    totalInterestFi30: fiSeries.slice(1, 31).reduce((s, _, i) => {
-      // recompute interest at start-of-year balance; approximate via remaining*rate
-      const startBalance = fiSeries[i].remaining;
-      return s + startBalance * (rate / 100);
-    }, 0),
+    totalInterestFi30,
   };
 }
 
