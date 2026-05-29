@@ -1,5 +1,11 @@
 # Housecalc — Swedish Home Purchase Calculator
 
+> **Status: HISTORICAL (v0 design, 2026-05-13).** The shipped UI diverged from
+> this spec. The wait-and-invest scenario was dropped (commit `eae60d8`) and
+> the calculation backend was removed (commit added by this PR). All math now
+> lives in `static/app.js`. See `README.md` for what actually runs today.
+> This document is retained for context on the original design intent.
+
 ## Purpose
 
 A web app that calculates and compares two scenarios for a Swedish house
