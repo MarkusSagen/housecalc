@@ -10,25 +10,21 @@ Output matches Booli/SBAB to the krona for typical Swedish purchases.
 
 ## Run
 
-    uv sync
-    uv run uvicorn app.main:app --reload
+Pure static site — no build step, no dependencies. Any HTTP server works:
 
-Open http://127.0.0.1:8000/. All calculations happen client-side in
-`static/app.js`; the backend only serves static files.
+    just dev                      # python3 -m http.server 8000
+    # or
+    npx serve .                   # if you prefer Node
+    # or
+    python3 -m http.server 8000
 
-## Test
-
-    uv run pytest
-
-(Two smoke tests verifying static files are served. The calculator math itself
-lives in `static/app.js` and is verified visually against Booli/SBAB.)
+Open http://127.0.0.1:8000/. All math runs client-side.
 
 ## Layout
 
-- `app/main.py` — FastAPI static-file server (one route: `GET /`).
-- `static/index.html` — single-page UI.
-- `static/app.js` — sliders, live recompute, FI tier rules, payoff chart.
-- `static/styles.css` — Booli-style layout.
+- `index.html` — single-page UI.
+- `app.js` — sliders, live recompute, FI tier rules, payoff chart.
+- `styles.css` — Booli-style layout.
 
 ## Rules encoded in the UI
 
