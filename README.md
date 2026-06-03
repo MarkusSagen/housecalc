@@ -10,30 +10,35 @@ Output matches Booli/SBAB to the krona for typical Swedish purchases.
 
 ## Run
 
-Pure static site — no build step, no dependencies. Any HTTP server works:
+Single self-contained `index.html` — no build step, no dependencies, no
+network calls at runtime. Just open it:
 
-    just dev                      # python3 -m http.server 8000
-    # or
-    npx serve .                   # if you prefer Node
-    # or
-    python3 -m http.server 8000
+    open index.html               # double-click works too (file:// is fine)
 
-Open http://127.0.0.1:8000/. All math runs client-side.
+Or serve it over HTTP if you prefer:
+
+    just dev                      # npx serve . -l 3000
+    # or
+    npx serve .
+
+All math runs client-side.
 
 ## Layout
 
-- `index.html` — single-page UI.
-- `app.js` — sliders, live recompute, FI tier rules, payoff chart, bank-rates panel.
-- `styles.css` — Booli-style layout.
-- `rates.json` — current list rates and snitträntor per bank. Banks publish
-  snitträntor monthly (5 business days after month-end); update this file then.
+- `index.html` — everything: markup, inlined styles, inlined bank-rates JSON
+  (`<script type="application/json" id="rates-data">`), vendored Chart.js,
+  and the inlined calc + app module (calc code is wrapped in
+  `/* CALC-START */ … /* CALC-END */` markers so tests can extract it).
+- `test/calc.test.mjs` — Node `--test` harness that parses the CALC block
+  out of `index.html` and runs assertions against the extracted module.
 
 ## Updating bank rates
 
-Edit `rates.json`. Each bank entry is `{ name, source, list, snitt }` with
-`list` and `snitt` keyed by binding term (`3m`, `1y`, `2y`, `3y`, `5y`, `10y`).
-Bump `updated` and `snittranta_period` at the top. The UI re-fetches on every
-page load — no rebuild needed.
+Edit the `<script type="application/json" id="rates-data">` block inside
+`index.html`. Each bank entry is `{ name, source, list, snitt }` with `list`
+and `snitt` keyed by binding term (`3m`, `1y`, `2y`, `3y`, `5y`, `10y`).
+Bump `updated` and `snittranta_period` at the top of the JSON. Reload the
+page — no rebuild needed.
 
 ## Rules encoded in the UI
 

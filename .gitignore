@@ -7,10 +7,3 @@
 
 # Playwright / browser-tool scratch
 .playwright-mcp/
-
-# Legacy Python (kept until working trees catch up)
-__pycache__/
-*.py[oc]
-.venv/
-.pytest_cache/
-.ruff_cache/

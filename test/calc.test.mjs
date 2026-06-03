@@ -1,7 +1,20 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 
-import {
+// Extract the calc block from the single-file index.html and load it as ESM.
+// The block is delimited by /* CALC-START */ ... /* CALC-END */ markers and
+// the source already contains `export` keywords (browser ignores them in an
+// inline module; Node treats them as real exports once we write to .mjs).
+const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+const match = html.match(/\/\* CALC-START \*\/([\s\S]*?)\/\* CALC-END \*\//);
+if (!match) throw new Error("CALC block not found in index.html");
+const tmpFile = join(mkdtempSync(join(tmpdir(), "housecalc-")), "calc.mjs");
+writeFileSync(tmpFile, match[1]);
+const {
   ranteavdragMonthlyCredit,
   recommendedAmortPct,
   computeForPrice,
@@ -12,7 +25,7 @@ import {
   AMORT_PCT_MID,
   AMORT_PCT_LOW,
   RANTEAVDRAG_CAP_ANNUAL,
-} from "../calc.js";
+} = await import(pathToFileURL(tmpFile).href);
 
 // =============================================================================
 // ranteavdragMonthlyCredit
