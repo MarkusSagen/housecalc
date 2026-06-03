@@ -327,35 +327,6 @@
       <p class="small muted" style="margin-top:0.5rem">Blå linje = lagstadgad minimi-amortering (sjunker stegvis). Orange linje = om du fortsätter amortera 2% (frivilligt) tills fullt avbetalt.</p>
     </section>
 
-    <!-- COMPARE PRICES -->
-    <section class="card compare-houses">
-      <div class="compare-head">
-        <h2>Jämför olika prisnivåer</h2>
-        <button type="button" id="add-compare" class="ghost">+ Lägg till pris</button>
-      </div>
-      <div class="compare-scroll">
-        <table class="compare-table">
-          <thead>
-            <tr>
-              <th>Pris</th>
-              <th>Kontantinsats</th>
-              <th>Bolån</th>
-              <th>Lagfart</th>
-              <th>Pantbrev</th>
-              <th>Total kontanter</th>
-              <th>Månadskostnad</th>
-              <th>Efter ränteavdrag</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody id="compare-body"></tbody>
-        </table>
-      </div>
-      <p class="small muted" style="margin-top:0.5rem">
-        Alla rader använder samma kontantinsats% (<span id="cmp-pct-display">10,0%</span>), ränta, amortering och befintliga pantbrev som ovan.
-      </p>
-    </section>
-
     <!-- SECONDARY SETTINGS -->
     <details class="card secondary">
       <summary>Fler inställningar (inkomst, källor, tidshorisont)</summary>
@@ -379,6 +350,50 @@
       <button type="button" id="add-hp" class="ghost">+ Lägg till källa</button>
     </details>
   </main>
+
+  <!-- COMPARE PRICES — sticky bottom drawer -->
+  <aside class="compare-drawer" id="compare-drawer" aria-label="Jämför olika prisnivåer">
+    <div class="compare-drawer-inner">
+      <button type="button" class="compare-drawer-header" id="compare-drawer-toggle" aria-expanded="false" aria-controls="compare-drawer-body">
+        <span class="cdh-title">
+          <span class="cdh-chevron" aria-hidden="true">▲</span>
+          Jämför olika prisnivåer
+        </span>
+        <span class="cdh-meta">
+          <span class="cdh-count"><span id="compare-count">0</span> alternativ</span>
+          <span class="cdh-state-text" data-when-open="Stäng" data-when-closed="Öppna">Öppna</span>
+        </span>
+      </button>
+      <div class="compare-drawer-body" id="compare-drawer-body" hidden>
+        <div class="compare-drawer-controls">
+          <p class="small muted compare-drawer-help">
+            Lägg till alternativa prisnivåer för att jämföra kontantinsats, månadskostnad och total kontantbehov sida vid sida. Alla rader använder samma kontantinsats% (<span id="cmp-pct-display">10,0%</span>), ränta, amortering och befintliga pantbrev som de stora reglagen ovan. Klicka <em>Räkna med</em> för att uppdatera reglagen till den raden.
+          </p>
+          <button type="button" id="add-compare" class="ghost">+ Lägg till pris</button>
+        </div>
+        <div class="compare-drawer-scroll">
+          <table class="compare-table">
+            <thead>
+              <tr>
+                <th>Pris</th>
+                <th>Kontantinsats</th>
+                <th>Bolån</th>
+                <th>Lagfart</th>
+                <th>Pantbrev</th>
+                <th>Total kontanter</th>
+                <th>Månadskostnad</th>
+                <th>Efter ränteavdrag</th>
+                <th></th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="compare-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </aside>
+
   <script type="module" src="app.js"></script>
 </body>
 </html>

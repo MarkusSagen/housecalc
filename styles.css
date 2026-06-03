@@ -385,47 +385,168 @@ input[type="range"].slider::-moz-range-thumb {
 }
 .tier-table tr.current td:first-child { border-left: 3px solid var(--accent); padding-left: 0.5rem; }
 
-/* ============ COMPARE PRICES ============ */
-.compare-head {
+/* ============ COMPARE PRICES — sticky bottom drawer ============ */
+
+/* Reserve viewport space at the bottom so the collapsed drawer doesn't
+   cover content. Header is ~54px tall. */
+body { padding-bottom: 64px; }
+
+.compare-drawer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 16px rgba(20, 40, 80, 0.08);
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+.compare-drawer-inner {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Header bar that always shows; tapping it toggles the body */
+.compare-drawer-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.75rem;
   gap: 1rem;
+  padding: 0.85rem 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
 }
-.compare-head h2 { margin: 0; }
-.compare-scroll { overflow-x: auto; }
-.compare-table { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 720px; }
+.compare-drawer-header:hover { color: var(--accent); }
+.compare-drawer-header:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.cdh-title {
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  letter-spacing: -0.01em;
+}
+.cdh-chevron {
+  display: inline-block;
+  font-size: 0.75rem;
+  color: var(--accent);
+  transition: transform 0.18s;
+}
+.compare-drawer.is-open .cdh-chevron { transform: rotate(180deg); }
+.cdh-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.cdh-count {
+  background: var(--accent-light);
+  color: var(--accent);
+  padding: 0.15rem 0.55rem;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.cdh-state-text { font-weight: 500; color: var(--accent); }
+
+/* Body (table + controls) — shown only when drawer is open */
+.compare-drawer-body {
+  padding-bottom: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+.compare-drawer-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+}
+.compare-drawer-help {
+  margin: 0;
+  max-width: 56ch;
+  line-height: 1.45;
+}
+.compare-drawer-scroll {
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Table styled to match the bank-rates-table */
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  min-width: 760px;
+}
 .compare-table th {
   text-align: left;
   padding: 0.45rem 0.75rem 0.45rem 0;
   border-bottom: 2px solid var(--border);
   color: var(--muted);
   font-weight: 600;
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
   white-space: nowrap;
+  background: var(--card);
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 .compare-table td {
   padding: 0.55rem 0.75rem 0.55rem 0;
   border-bottom: 1px solid var(--border);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  vertical-align: middle;
 }
 .compare-table th:not(:first-child),
 .compare-table td:not(:first-child) { text-align: right; }
-.compare-table th:last-child, .compare-table td:last-child {
-  text-align: center; padding-right: 0; width: 2.5rem;
+.compare-table th:nth-last-child(-n+2),
+.compare-table td:nth-last-child(-n+2) {
+  text-align: center;
+  padding-right: 0;
 }
+.compare-table th:last-child, .compare-table td:last-child { width: 2.25rem; }
+.compare-table th:nth-last-child(2), .compare-table td:nth-last-child(2) { width: 6rem; }
 .compare-table tr:last-child td { border-bottom: none; }
+
+/* Current-price row is the anchor — same accent treatment as bank-rates rows */
 .compare-table tr.current td {
   background: var(--accent-light);
   font-weight: 600;
+  color: var(--accent);
 }
 .compare-table tr.current td:first-child {
-  border-left: 3px solid var(--accent); padding-left: 0.5rem;
+  border-left: 4px solid var(--accent);
+  padding-left: 0.55rem;
 }
+.compare-table tbody tr:not(.current) td:first-child {
+  border-left: 4px solid transparent;
+  padding-left: 0.55rem;
+}
+
 .compare-price-input {
   width: 8rem;
   padding: 0.35rem 0.55rem;
@@ -440,6 +561,25 @@ input[type="range"].slider::-moz-range-thumb {
 }
 .compare-price-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-light); }
 .cmp-price-text { font-size: 1rem; }
+
+/* Apply button matches bank-rates "Räkna med" pill */
+.compare-apply {
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.3rem 0.7rem;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.compare-apply:hover { background: var(--accent); color: white; }
+.compare-apply:focus-visible {
+  outline: 2px solid var(--accent-2);
+  outline-offset: 1px;
+}
+
 .compare-remove {
   background: transparent;
   color: var(--bad);
@@ -453,6 +593,12 @@ input[type="range"].slider::-moz-range-thumb {
   padding: 0;
 }
 .compare-remove:hover { background: var(--bad); color: white; border-color: var(--bad); }
+
+@media (max-width: 720px) {
+  .compare-drawer { max-height: 80vh; }
+  .compare-drawer-inner { padding: 0 1rem; }
+  .compare-drawer-controls { flex-direction: column; gap: 0.6rem; }
+}
 
 /* ============ SECONDARY SECTION ============ */
 .secondary > summary {

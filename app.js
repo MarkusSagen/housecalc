@@ -350,12 +350,13 @@ function buildCompareTable() {
     <td class="cmp-monthly">—</td>
     <td class="cmp-aftertax">—</td>
     <td></td>
+    <td></td>
   </tr>`);
   comparePrices.forEach((price, idx) => {
     rows.push(`<tr data-row="${idx}">
       <td>
         <input type="text" inputmode="numeric" class="compare-price-input"
-               data-idx="${idx}" value="${fmtThousands(price)}" />
+               data-idx="${idx}" value="${fmtThousands(price)}" aria-label="Pris för jämförelserad ${idx + 1}" />
         <span class="control-unit small">kr</span>
       </td>
       <td class="cmp-hp">—</td>
@@ -365,10 +366,12 @@ function buildCompareTable() {
       <td class="cmp-total"><strong>—</strong></td>
       <td class="cmp-monthly">—</td>
       <td class="cmp-aftertax">—</td>
+      <td><button type="button" class="compare-apply" data-idx="${idx}" aria-label="Räkna med denna prisnivå i kalkylatorn ovan">Räkna med</button></td>
       <td><button type="button" class="compare-remove" data-idx="${idx}" aria-label="Ta bort">×</button></td>
     </tr>`);
   });
   $("#compare-body").innerHTML = rows.join("");
+  updateCompareCount();
 
   $$(".compare-price-input").forEach((inp) => {
     attachThousandFormatter(inp);
@@ -378,6 +381,12 @@ function buildCompareTable() {
       updateCompareValues(readPrimaryParams());
     });
   });
+  $$(".compare-apply").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      applyPrice(comparePrices[idx] ?? 0);
+    });
+  });
   $$(".compare-remove").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = parseInt(btn.dataset.idx, 10);
@@ -385,6 +394,47 @@ function buildCompareTable() {
       buildCompareTable();
       renderLiveSummary();
     });
+  });
+}
+
+function updateCompareCount() {
+  const el = $("#compare-count");
+  if (el) el.textContent = comparePrices.length;
+}
+
+function applyPrice(newPrice) {
+  if (!Number.isFinite(newPrice) || newPrice <= 0) return;
+  suppressSync = true;
+  priceInput.value = fmtThousands(newPrice);
+  priceSlider.value = Math.min(
+    +priceSlider.max,
+    Math.max(+priceSlider.min, newPrice),
+  );
+  suppressSync = false;
+  syncFromPriceOrPct();
+  renderLiveSummary();
+}
+
+function wireCompareDrawer() {
+  const drawer = $("#compare-drawer");
+  const toggle = $("#compare-drawer-toggle");
+  const body = $("#compare-drawer-body");
+  if (!drawer || !toggle || !body) return;
+
+  const stateText = toggle.querySelector(".cdh-state-text");
+  const setOpen = (open) => {
+    drawer.classList.toggle("is-open", open);
+    toggle.setAttribute("aria-expanded", open ? "true" : "false");
+    body.hidden = !open;
+    if (stateText) {
+      stateText.textContent = open
+        ? stateText.dataset.whenOpen
+        : stateText.dataset.whenClosed;
+    }
+  };
+  setOpen(false);
+  toggle.addEventListener("click", () => {
+    setOpen(!drawer.classList.contains("is-open"));
   });
 }
 
@@ -545,6 +595,11 @@ $("#add-compare").addEventListener("click", () => {
   comparePrices.push(suggestion);
   buildCompareTable();
   renderLiveSummary();
+  // Make sure the drawer is open so the user sees the new row.
+  const drawer = $("#compare-drawer");
+  if (drawer && !drawer.classList.contains("is-open")) {
+    $("#compare-drawer-toggle").click();
+  }
   const inputs = $$(".compare-price-input");
   const last = inputs[inputs.length - 1];
   if (last) {
@@ -759,6 +814,7 @@ function applyRate(newRate) {
 }
 
 // init
+wireCompareDrawer();
 buildCompareTable();
 wireBankRatesUI();
 syncFromPriceOrPct();
