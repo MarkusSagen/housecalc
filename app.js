@@ -1,3 +1,10 @@
+import {
+  ranteavdragMonthlyCredit,
+  recommendedAmortPct,
+  computeForPrice,
+  projectPayoff,
+} from "./calc.js";
+
 const fmt = (n) =>
   new Intl.NumberFormat("sv-SE", { maximumFractionDigits: 0 }).format(n) +
   " kr";
@@ -63,46 +70,7 @@ attachThousandFormatter(hpInput);
 attachThousandFormatter(existingPantbrevInput);
 attachThousandFormatter(feeInput);
 
-// ===== Calculation =====
-
-function ranteavdragMonthlyCredit(monthlyInterestKr) {
-  const annual = monthlyInterestKr * 12;
-  const credit =
-    annual <= 100_000
-      ? Math.round(annual * 0.3)
-      : Math.round(100_000 * 0.3 + (annual - 100_000) * 0.21);
-  return Math.floor(credit / 12);
-}
-
-// Amortization tiers under lag 2026:226 (effective 2026-04-01).
-// The +1% rule for DTI > 4.5× (skärpta amorteringskravet) was abolished on the same date.
-function recommendedAmortPct(ltvPct) {
-  if (ltvPct > 70) return 2;
-  if (ltvPct > 50) return 1;
-  return 0;
-}
-
-function computeForPrice(price, params) {
-  const { hpPct, existingPantbrev, rate, amort, monthlyFee } = params;
-  const hpTotal = Math.round((price * hpPct) / 100);
-  const loan = Math.max(0, price - hpTotal);
-  const ltv = price > 0 ? (loan / price) * 100 : 0;
-
-  const lagfart = price > 0 ? Math.round(0.015 * price) + 825 : 0;
-  const newPantbrev = Math.max(0, loan - existingPantbrev);
-  const pantbrev = newPantbrev > 0 ? Math.round(0.02 * newPantbrev) + 375 : 0;
-  const onetimeTotal = hpTotal + lagfart + pantbrev;
-
-  const monthlyInterest = Math.round((loan * (rate / 100)) / 12);
-  const monthlyAmort = Math.round((loan * (amort / 100)) / 12);
-  const monthlyTotal = monthlyInterest + monthlyAmort + monthlyFee;
-  const monthlyAfterTax = monthlyTotal - ranteavdragMonthlyCredit(monthlyInterest);
-
-  return {
-    price, hpTotal, loan, ltv, lagfart, pantbrev, onetimeTotal,
-    monthlyInterest, monthlyAmort, monthlyFee, monthlyTotal, monthlyAfterTax,
-  };
-}
+// ===== Read params from DOM =====
 
 function readPrimaryParams() {
   const price = parseDigits(priceInput.value);
@@ -280,65 +248,6 @@ function renderInsights(p, r, dti) {
 }
 
 // ===== Payoff projection =====
-
-function projectPayoff(initialLoan, initialPrice, rate, appreciationPct, maxYears = 50) {
-  const fiSeries = [];
-  const voluntarySeries = [];
-  let remainingFi = initialLoan;
-  let remainingVol = initialLoan;
-  let houseValue = initialPrice;
-
-  let yearTier1 = null;
-  let yearTier0 = null;
-  let yearPaidOffFi = null;
-  let yearPaidOffVol = null;
-
-  fiSeries.push({ year: 0, remaining: remainingFi, ltv: 100 * remainingFi / houseValue });
-  voluntarySeries.push({ year: 0, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });
-
-  const voluntaryAnnualAmort = 0.02 * initialLoan; // 2% of original, kept up voluntarily
-
-  for (let year = 1; year <= maxYears; year++) {
-    // House appreciates first (FI re-evaluates LTV annually)
-    houseValue = houseValue * (1 + appreciationPct / 100);
-
-    // FI track
-    const ltvFi = (remainingFi / houseValue) * 100;
-    const amortPctFi = recommendedAmortPct(ltvFi);
-    const annualAmortFi = (amortPctFi / 100) * initialLoan;
-    const paidFi = Math.min(annualAmortFi, remainingFi);
-    remainingFi = Math.max(0, remainingFi - paidFi);
-
-    if (yearTier1 === null && ltvFi <= 70) yearTier1 = year;
-    if (yearTier0 === null && ltvFi <= 50) yearTier0 = year;
-    if (yearPaidOffFi === null && remainingFi <= 0) yearPaidOffFi = year;
-
-    fiSeries.push({ year, remaining: remainingFi, ltv: ltvFi });
-
-    // Voluntary 2% track
-    const paidVol = Math.min(voluntaryAnnualAmort, remainingVol);
-    remainingVol = Math.max(0, remainingVol - paidVol);
-    if (yearPaidOffVol === null && remainingVol <= 0) yearPaidOffVol = year;
-
-    voluntarySeries.push({ year, remaining: remainingVol, ltv: 100 * remainingVol / houseValue });
-  }
-
-  // Sum interest for years 1..30 using each year's start-of-year balance
-  // (= the prior year's remaining). Approximation: ignores intra-year amortization.
-  const totalInterestFi30 = fiSeries
-    .slice(0, 30)
-    .reduce((sum, snapshot) => sum + snapshot.remaining * (rate / 100), 0);
-
-  return {
-    fiSeries,
-    voluntarySeries,
-    yearTier1,
-    yearTier0,
-    yearPaidOffFi,
-    yearPaidOffVol,
-    totalInterestFi30,
-  };
-}
 
 function renderPayoff(p, r) {
   const appreciation = parseFloat(appreciationInput.value || "0");

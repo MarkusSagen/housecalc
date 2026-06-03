@@ -1,0 +1,6 @@
+{
+  "name": "housecalc",
+  "private": true,
+  "type": "module",
+  "description": "Pure static Swedish bolån calculator. No deps. package.json exists only so Node treats .js as ES modules for the test harness."
+}
