@@ -36,9 +36,8 @@ lives in `static/app.js` and is verified visually against Booli/SBAB.)
 |------|-------|--------|
 | LTV cap (bolånetak) | 90% — raised from 85% on 2026-04-01; UI defaults to 10% kontantinsats but does not enforce | Lag 2026:226 |
 | Amortization tiers | LTV >70% = 2%, 50% < LTV ≤ 70% = 1%, LTV ≤50% = 0% | Lag 2026:226 |
-| Stämpelskatt (lagfart) | 1.5% of purchase price | Lantmäteriet |
-| Pantbrev stamp duty | 2% of *new* pantbrev + 375 kr | Lantmäteriet |
-| Lagfart fee | 825 kr | Lantmäteriet |
+| Lagfart | 1.5% of purchase price + 825 kr fixed fee | Lantmäteriet |
+| Pantbrev | 2% of *new* pantbrev + 375 kr fixed fee | Lantmäteriet |
 | Ränteavdrag | 30% on first 100 000 kr, 21% beyond | Skatteverket |
 
 The *skärpta amorteringskravet* (+1% extra amortization for loans > 4.5× årsinkomst) was

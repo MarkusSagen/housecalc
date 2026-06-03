@@ -607,7 +607,7 @@ feeInput.addEventListener("input", () => {
     feeSlider.value = Math.min(+feeSlider.max, Math.max(+feeSlider.min, v));
     suppressSync = false;
   }
-  // renderLiveSummary will be called by the existing listener below
+  renderLiveSummary();
 });
 
 $$(".rate-preset").forEach((btn) => {
@@ -620,7 +620,7 @@ $$(".rate-preset").forEach((btn) => {
   });
 });
 
-[existingPantbrevInput, feeInput, appreciationInput].forEach((el) =>
+[existingPantbrevInput, appreciationInput].forEach((el) =>
   el.addEventListener("input", renderLiveSummary),
 );
 [incomeInput, horizonInput].forEach((el) =>

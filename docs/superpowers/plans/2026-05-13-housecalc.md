@@ -1,5 +1,11 @@
 # Housecalc Implementation Plan
 
+> **Status: HISTORICAL (v0 plan, 2026-05-13).** The implementation diverged from
+> this plan. The wait-and-invest scenario was dropped from the UI, the FastAPI
+> calculation backend was removed (see `2026-05-29-housecalc-trim-dead-backend.md`),
+> and all math now lives in the JS frontend. See `README.md` for what runs today.
+> This document is retained for context on the original implementation intent.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Build a single-page web app that compares buying a house in Sweden now vs. waiting and investing the down payment in stocks, with handpenning modeled as a list of named sources.
