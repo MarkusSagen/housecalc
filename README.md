@@ -23,8 +23,17 @@ Open http://127.0.0.1:8000/. All math runs client-side.
 ## Layout
 
 - `index.html` — single-page UI.
-- `app.js` — sliders, live recompute, FI tier rules, payoff chart.
+- `app.js` — sliders, live recompute, FI tier rules, payoff chart, bank-rates panel.
 - `styles.css` — Booli-style layout.
+- `rates.json` — current list rates and snitträntor per bank. Banks publish
+  snitträntor monthly (5 business days after month-end); update this file then.
+
+## Updating bank rates
+
+Edit `rates.json`. Each bank entry is `{ name, source, list, snitt }` with
+`list` and `snitt` keyed by binding term (`3m`, `1y`, `2y`, `3y`, `5y`, `10y`).
+Bump `updated` and `snittranta_period` at the top. The UI re-fetches on every
+page load — no rebuild needed.
 
 ## Rules encoded in the UI
 

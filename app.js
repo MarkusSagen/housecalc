@@ -191,6 +191,7 @@ function renderLiveSummary() {
   renderInsights(p, r, dti);
   updateCompareValues(p);
   renderPayoff(p, r);
+  renderBankRates(p, r);
 }
 
 function updateSliderProgress() {
@@ -643,7 +644,74 @@ $("#add-compare").addEventListener("click", () => {
   }
 });
 
+// ===== Bank rates =====
+
+let bankRatesData = null;
+
+async function loadBankRates() {
+  try {
+    const res = await fetch("rates.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    bankRatesData = await res.json();
+  } catch (err) {
+    $("#bank-rates-body").innerHTML =
+      `<tr><td colspan="6" class="muted">Kunde inte ladda rates.json (${err.message}). Öppna sidan via en webbserver, inte file://.</td></tr>`;
+    return;
+  }
+  $("#rates-period").textContent = bankRatesData.snittranta_period;
+  $("#bank-rates-updated").textContent = bankRatesData.updated;
+  renderLiveSummary();
+}
+
+function fmtPct(n) {
+  return n.toFixed(2).replace(".", ",") + "%";
+}
+
+function renderBankRates(p, r) {
+  if (!bankRatesData) return;
+  const tbody = $("#bank-rates-body");
+
+  const rows = bankRatesData.banks.map((b, idx) => {
+    const list3m = b.list?.["3m"] ?? null;
+    const list3y = b.list?.["3y"] ?? null;
+    const snitt3m = b.snitt?.["3m"] ?? null;
+    const rateForCalc = snitt3m ?? list3m ?? 0;
+
+    const interest = Math.round((r.loan * rateForCalc) / 100 / 12);
+    const amort = r.monthlyAmort;
+    const monthly = interest + amort + r.monthlyFee;
+
+    return `<tr>
+      <td>
+        <div class="bank-name">${b.name}</div>
+        <div class="bank-source"><a href="${b.source}" target="_blank" rel="noopener noreferrer">→ källa</a></div>
+      </td>
+      <td>${list3m !== null ? fmtPct(list3m) : "—"}</td>
+      <td>${snitt3m !== null ? fmtPct(snitt3m) : "—"}</td>
+      <td>${list3y !== null ? fmtPct(list3y) : "—"}</td>
+      <td><strong>${fmtMon(monthly)}</strong></td>
+      <td><button type="button" class="bank-apply" data-rate="${rateForCalc}" aria-label="Använd ${b.name} snittränta">Räkna med</button></td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows.join("");
+
+  $$(".bank-apply").forEach((btn) => {
+    btn.addEventListener("click", () => applyRate(+btn.dataset.rate));
+  });
+}
+
+function applyRate(newRate) {
+  if (!Number.isFinite(newRate) || newRate <= 0) return;
+  suppressSync = true;
+  rateInput.value = newRate.toFixed(2);
+  rateSlider.value = Math.min(+rateSlider.max, Math.max(+rateSlider.min, newRate));
+  suppressSync = false;
+  renderLiveSummary();
+}
+
 // init
 buildCompareTable();
 syncFromPriceOrPct();
 renderLiveSummary();
+loadBankRates();

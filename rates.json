@@ -1,0 +1,43 @@
+{
+  "updated": "2026-06-03",
+  "snittranta_period": "april 2026",
+  "note": "Listränta = annonserad ränta före rabatt. Snittränta = vad bankens kunder i genomsnitt fick under perioden (Finansinspektionens månadsrapportering, publiceras 5 arbetsdagar efter månadsslut).",
+  "banks": [
+    {
+      "name": "SBAB",
+      "source": "https://www.sbab.se/1/privat/vara_rantor.html",
+      "list": { "3m": 3.15, "1y": 3.47, "2y": 3.64, "3y": 3.79, "5y": 3.99, "10y": 4.39 },
+      "snitt": { "3m": 2.79, "1y": 3.21, "2y": 3.42, "3y": 3.55, "5y": 3.80 }
+    },
+    {
+      "name": "Nordea",
+      "source": "https://www.nordea.se/privat/produkter/bolan/listrantor.html",
+      "list": { "3m": 3.99, "1y": 3.64, "2y": 3.84, "3y": 3.94, "5y": 4.09 },
+      "snitt": { "3m": 2.82 }
+    },
+    {
+      "name": "SEB",
+      "source": "https://seb.se/privat/bolan/bolanerantor",
+      "list": { "3m": 3.94 },
+      "snitt": { "3m": 2.72 }
+    },
+    {
+      "name": "Swedbank",
+      "source": "https://www.swedbank.se/privat/boende-och-bolan/bolanerantor.html",
+      "list": { "3m": 3.89 },
+      "snitt": { "3m": 2.76 }
+    },
+    {
+      "name": "Handelsbanken",
+      "source": "https://www.handelsbanken.se/sv/privat/bolan/bolanerantor",
+      "list": { "3m": 3.99, "1y": 3.64, "2y": 3.74, "3y": 3.89, "5y": 4.09 },
+      "snitt": { "3m": 2.76, "1y": 3.20, "2y": 3.36, "3y": 3.47, "5y": 3.60 }
+    },
+    {
+      "name": "Länsförsäkringar",
+      "source": "https://www.lansforsakringar.se/privat/bank/lana/bolan/bolanerantor/",
+      "list": { "3m": 3.99, "1y": 3.59, "2y": 3.74, "3y": 3.85, "5y": 4.09, "10y": 4.50 },
+      "snitt": { "3m": 2.81 }
+    }
+  ]
+}

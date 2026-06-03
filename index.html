@@ -96,10 +96,11 @@
           <input type="range" class="slider" id="rate-slider" min="0" max="10" step="0.05" value="3.0" />
           <div class="slider-marks"><span>0%</span><span>2%</span><span>4%</span><span>6%</span><span>8%</span><span>10%</span></div>
           <div class="rate-presets">
-            <button type="button" class="rate-preset" data-rate="2.95">SBAB 3 mån 2,95%</button>
-            <button type="button" class="rate-preset" data-rate="3.00">Booli 3,00%</button>
-            <button type="button" class="rate-preset" data-rate="3.50">3 år bunden 3,50%</button>
+            <button type="button" class="rate-preset" data-rate="2.80">Snittränta ≈ 2,80%</button>
+            <button type="button" class="rate-preset" data-rate="3.95">Listränta ≈ 3,95%</button>
+            <button type="button" class="rate-preset" data-rate="3.80">3 år bunden ≈ 3,80%</button>
           </div>
+          <small class="muted" style="margin-top:0.3rem">Listränta = annonserad. Snittränta = vad kunderna faktiskt fått. Se "Jämför banker" nedan för aktuella siffror per bank.</small>
         </div>
 
         <div class="control">
@@ -182,6 +183,36 @@
         </table>
         <p class="small muted" style="margin-top:0.5rem">Behåll samma amortering — bara räntan ändras.</p>
       </div>
+    </section>
+
+    <!-- BANK RATES -->
+    <section class="card bank-rates">
+      <div class="bank-rates-head">
+        <h2>Jämför banker — aktuella räntor</h2>
+        <div class="bank-rates-meta">
+          <strong>Listränta</strong> = annonserad ränta före rabatt. <strong>Snittränta</strong> = vad bankens kunder i genomsnitt fick under <span id="rates-period">—</span> (FI:s månadsrapportering).
+        </div>
+      </div>
+      <div class="bank-rates-scroll">
+        <table class="bank-rates-table">
+          <thead>
+            <tr>
+              <th>Bank</th>
+              <th>Listränta<br>3 mån</th>
+              <th>Snittränta<br>3 mån</th>
+              <th>Listränta<br>3 år bunden</th>
+              <th>Din månadskostnad<br>vid snittränta</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bank-rates-body">
+            <tr><td colspan="6" class="muted">Laddar räntor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:0.5rem">
+        Senast uppdaterad <span id="bank-rates-updated">—</span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Räntor uppdateras månadsvis — redigera <code>rates.json</code> i repot för att uppdatera.
+      </p>
     </section>
 
     <!-- PAYOFF PROJECTION -->
