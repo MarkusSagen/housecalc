@@ -667,28 +667,46 @@ function fmtPct(n) {
   return n.toFixed(2).replace(".", ",") + "%";
 }
 
+const BANK_TYPE_LABEL = {
+  storbank: "Storbank",
+  niche: "Nischbank",
+  borgo: "Borgo",
+  pb: "Private Banking",
+  subprime: "Second-tier",
+};
+
+function escapeAttr(s) {
+  return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
 function renderBankRates(p, r) {
   if (!bankRatesData) return;
   const tbody = $("#bank-rates-body");
 
-  const rows = bankRatesData.banks.map((b, idx) => {
+  const rows = bankRatesData.banks.map((b) => {
     const list3m = b.list?.["3m"] ?? null;
-    const list3y = b.list?.["3y"] ?? null;
     const snitt3m = b.snitt?.["3m"] ?? null;
-    const rateForCalc = snitt3m ?? list3m ?? 0;
+    // Pick the best available rate for the monthly-cost column.
+    const rateForCalc = snitt3m ?? list3m ?? Object.values(b.snitt ?? {})[0] ?? 0;
 
     const interest = Math.round((r.loan * rateForCalc) / 100 / 12);
-    const amort = r.monthlyAmort;
-    const monthly = interest + amort + r.monthlyFee;
+    const monthly = interest + r.monthlyAmort + r.monthlyFee;
+
+    const c = b.criteria ?? {};
+    const typeBadge = b.type
+      ? `<span class="bank-type bank-type--${b.type}">${BANK_TYPE_LABEL[b.type] ?? b.type}</span>`
+      : "";
+    const krav = c.short_label ?? "—";
+    const kravTitle = c.details ? escapeAttr(c.details) : "";
 
     return `<tr>
       <td>
-        <div class="bank-name">${b.name}</div>
+        <div class="bank-name">${b.name} ${typeBadge}</div>
         <div class="bank-source"><a href="${b.source}" target="_blank" rel="noopener noreferrer">→ källa</a></div>
       </td>
       <td>${list3m !== null ? fmtPct(list3m) : "—"}</td>
       <td>${snitt3m !== null ? fmtPct(snitt3m) : "—"}</td>
-      <td>${list3y !== null ? fmtPct(list3y) : "—"}</td>
+      <td class="bank-krav" title="${kravTitle}">${krav}</td>
       <td><strong>${fmtMon(monthly)}</strong></td>
       <td><button type="button" class="bank-apply" data-rate="${rateForCalc}" aria-label="Använd ${b.name} snittränta">Räkna med</button></td>
     </tr>`;

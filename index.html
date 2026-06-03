@@ -200,7 +200,7 @@
               <th>Bank</th>
               <th>Listränta<br>3 mån</th>
               <th>Snittränta<br>3 mån</th>
-              <th>Listränta<br>3 år bunden</th>
+              <th>Krav</th>
               <th>Din månadskostnad<br>vid snittränta</th>
               <th></th>
             </tr>
@@ -211,8 +211,26 @@
         </table>
       </div>
       <p class="small muted" style="margin-top:0.5rem">
-        Senast uppdaterad <span id="bank-rates-updated">—</span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Räntor uppdateras månadsvis — redigera <code>rates.json</code> i repot för att uppdatera.
+        Senast uppdaterad <span id="bank-rates-updated">—</span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Hovra över <em>Krav</em>-cellen för mer detaljer. Räntor uppdateras månadsvis — redigera <code>rates.json</code> för att uppdatera.
       </p>
+
+      <details class="bank-rates-explainer">
+        <summary>Vad betyder kraven? (skuldkvot, KALP, belåningsgrad)</summary>
+        <div class="explainer-body">
+          <h4>Skuldkvot</h4>
+          <p>Totalt bolån ÷ hushållets bruttoårsinkomst. Sedan 2026-04-01 finns inget lagstadgat tak — varje bank sätter sin egen gräns. De flesta lånar max 5–6×, men <strong>Nordea och Handelsbanken har inget formellt tak</strong> (KALP avgör).</p>
+          <h4>KALP (Kvar Att Leva På)</h4>
+          <p>Bankens stresstest: räntan höjs i kalkylen till <strong>6–7%</strong> (Handelsbanken/Nordea/Danske ~6,0%; SBAB/SEB upp till 7%; Swedbank ~6,4%). Konsumentverkets schablonkostnader dras från nettoinkomsten. Ofta KALP, inte skuldkvot, som blir den bindande gränsen.</p>
+          <h4>Belåningsgrad (LTV)</h4>
+          <p>Bolån ÷ bostadens marknadsvärde. Lagtaket är <strong>90%</strong> sedan 2026-04-01 (höjt från 85%). Vissa banker har lägre interna LTV-tak för specifika produkter — Avanza Superbolånet 50–60%, Nordnet PB 50%, Landshypotek 85%.</p>
+          <h4>Borgo-bankerna</h4>
+          <p>Bolån från <strong>Ikano Bank, ICA Banken och Ålandsbanken</strong> ges av <em>Borgo</em> — ett gemensamt hypoteksbolag (ägs även av Söderberg &amp; Partners). Räntorna och villkoren är liknande mellan dessa tre.</p>
+          <h4>Private Banking (Avanza/Nordnet)</h4>
+          <p>Marknadens lägsta räntor (~2,10–2,15%) men kräver stor förmögenhet hos banken: Avanza Superbolånet PB kräver ≥3 Mkr hos Avanza, Nordnet har skalad rabatt upp till ≥70 Mkr för lägsta nivån (1,75%). Max 50–60% belåningsgrad.</p>
+          <h4>Second-tier (Bluestep, Marginalen, Svea)</h4>
+          <p>Riktar sig till kunder som inte fått lån hos storbanker (betalningsanmärkningar, oregelbunden inkomst, egenföretagare). Räntor 5–6%. Ofta första steget mot konsolidering hos storbank.</p>
+        </div>
+      </details>
     </section>
 
     <!-- PAYOFF PROJECTION -->

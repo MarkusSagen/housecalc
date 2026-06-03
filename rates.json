@@ -1,43 +1,261 @@
 {
   "updated": "2026-06-03",
   "snittranta_period": "april 2026",
-  "note": "Listränta = annonserad ränta före rabatt. Snittränta = vad bankens kunder i genomsnitt fick under perioden (Finansinspektionens månadsrapportering, publiceras 5 arbetsdagar efter månadsslut).",
+  "note": "Listränta = annonserad ränta före rabatt. Snittränta = vad bankens kunder i genomsnitt fick under perioden (Finansinspektionens månadsrapportering, publiceras 5 arbetsdagar efter månadsslut). Skuldkvotstak (DTI cap) är en intern bankregel — det finns inget lagstadgat tak sedan skärpta amorteringskravet togs bort 2026-04-01. Källor: compricer.se/borantor/, respektive banks egen sida (länkad per rad).",
   "banks": [
     {
-      "name": "SBAB",
-      "source": "https://www.sbab.se/1/privat/vara_rantor.html",
-      "list": { "3m": 3.15, "1y": 3.47, "2y": 3.64, "3y": 3.79, "5y": 3.99, "10y": 4.39 },
-      "snitt": { "3m": 2.79, "1y": 3.21, "2y": 3.42, "3y": 3.55, "5y": 3.80 }
+      "name": "Skandiabanken",
+      "source": "https://www.skandia.se/lana/bolan/",
+      "type": "niche",
+      "snitt": { "3m": 2.64, "1y": 2.93, "2y": 3.06, "3y": 3.11, "5y": 3.40 },
+      "criteria": {
+        "max_dti": 5.0,
+        "max_ltv_pct": 90,
+        "short_label": "Skuldkvot max 5×",
+        "details": "Förhandlingsfria räntor — sätts av belåningsgrad. Rabatt för grönt bolån och tjänstepension hos Skandia. Inga betalningsanmärkningar tillåtna. Kräver garanterad inkomst (fast anställning, eget företag eller pension)."
+      }
     },
     {
-      "name": "Nordea",
-      "source": "https://www.nordea.se/privat/produkter/bolan/listrantor.html",
-      "list": { "3m": 3.99, "1y": 3.64, "2y": 3.84, "3y": 3.94, "5y": 4.09 },
-      "snitt": { "3m": 2.82 }
+      "name": "Landshypotek",
+      "source": "https://www.landshypotek.se/lana/bolan/",
+      "type": "niche",
+      "snitt": { "3m": 2.71, "1y": 3.08, "2y": 3.27, "3y": 3.45, "5y": 3.66 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 85,
+        "min_loan_kr": 750000,
+        "short_label": "Min 750k lån för rabatt",
+        "details": "Förhandlingsfritt. Rabattnivåer vid LTV ≤60%, ≤75%, ≤80%, ≤85%. Lån under 750 000 kr betalar listränta. Erbjuder inte byggnadskreditiv, lånelöften, handpenningslån eller överbryggningslån. 30/360 ränteberäkning."
+      }
+    },
+    {
+      "name": "Ålandsbanken",
+      "source": "https://www.alandsbanken.se/",
+      "type": "borgo",
+      "snitt": { "3m": 2.71 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "lender": "Borgo",
+        "short_label": "Borgo-baserat",
+        "details": "Bolånet ges av Borgo (gemensam hypoteksaktör, ägs av Ikano Bank, ICA Banken, Söderberg & Partners och Ålandsbanken). Räntan sätts av belåningsgrad utan förhandling."
+      }
     },
     {
       "name": "SEB",
       "source": "https://seb.se/privat/bolan/bolanerantor",
+      "type": "storbank",
+      "snitt": { "3m": 2.72, "1y": 3.05, "2y": 3.09, "3y": 3.20, "5y": 3.28, "7y": 3.38, "10y": 4.00 },
       "list": { "3m": 3.94 },
-      "snitt": { "3m": 2.72 }
+      "criteria": {
+        "max_dti": 6.0,
+        "max_ltv_pct": 90,
+        "short_label": "Skuldkvot (individuellt)",
+        "details": "Har skuldkvotstak men sätter det individuellt per kund. KALP-kalkylränta ca 6–7%. Räntan förhandlas — snittränta är vad kunder fått, listränta är utgångsläget."
+      }
+    },
+    {
+      "name": "Danske Bank",
+      "source": "https://danskebank.se/privat/produkter/bolan/",
+      "type": "storbank",
+      "snitt": { "3m": 2.72, "1y": 2.80, "2y": 3.13, "3y": 3.19, "5y": 3.39 },
+      "criteria": {
+        "max_dti": 6.0,
+        "max_ltv_pct": 90,
+        "short_label": "Skuldkvot ca 6×",
+        "details": "Har internt skuldkvotstak. KALP-kalkylränta 6,0%. Räntan förhandlas individuellt."
+      }
+    },
+    {
+      "name": "ICA Banken",
+      "source": "https://www.icabanken.se/",
+      "type": "borgo",
+      "snitt": { "3m": 2.74, "1y": 3.39, "2y": 3.56 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "lender": "Borgo",
+        "short_label": "Borgo-baserat",
+        "details": "Bolånet ges av Borgo (gemensamt hypoteksbolag ägt av Ikano Bank, ICA Banken, Söderberg & Partners och Ålandsbanken). Färdigförhandlade räntor baserade på belåningsgrad. ICA-kort/-konto inte krav."
+      }
+    },
+    {
+      "name": "Stabelo",
+      "source": "https://www.stabelo.se/",
+      "type": "niche",
+      "snitt": { "3m": 2.75, "1y": 2.95, "2y": 3.16, "3y": 3.25, "5y": 3.50 },
+      "criteria": {
+        "max_dti": 6.0,
+        "max_ltv_pct": 90,
+        "min_loan_kr": 500000,
+        "max_loan_kr": 20000000,
+        "short_label": "Skuldkvot max 6×",
+        "details": "Transparent prissättning — samma ränta för nya och befintliga kunder, ingen förhandling. Endast permanentboende (inga fritidshus). Kräver fast anställning eller dokumenterad stabil inkomst. Grön rabatt -0,10pp för energiklass A/B. Tillgänglig även via Nordnet/Bolån+/Avanza."
+      }
     },
     {
       "name": "Swedbank",
       "source": "https://www.swedbank.se/privat/boende-och-bolan/bolanerantor.html",
+      "type": "storbank",
+      "snitt": { "3m": 2.76, "1y": 2.96, "2y": 3.19, "3y": 3.05, "4y": 3.44, "5y": 3.52, "6y": 3.88, "7y": 3.66, "8y": 3.67, "10y": 3.92 },
       "list": { "3m": 3.89 },
-      "snitt": { "3m": 2.76 }
+      "criteria": {
+        "max_dti": 4.5,
+        "max_ltv_pct": 90,
+        "short_label": "Skuldkvot ca 4,5×",
+        "details": "Swedbanks generella regel är 4,5× bruttoinkomst per år. KALP-kalkylränta ca 6,4%. Räntan förhandlas individuellt. Fastighetsbyrån (Swedbank-ägd mäklare) hänvisar till Swedbanks räntor."
+      }
     },
     {
       "name": "Handelsbanken",
       "source": "https://www.handelsbanken.se/sv/privat/bolan/bolanerantor",
+      "type": "storbank",
+      "snitt": { "3m": 2.76, "1y": 3.20, "2y": 3.36, "3y": 3.47, "5y": 3.60, "8y": 3.92, "10y": 4.23 },
       "list": { "3m": 3.99, "1y": 3.64, "2y": 3.74, "3y": 3.89, "5y": 4.09 },
-      "snitt": { "3m": 2.76, "1y": 3.20, "2y": 3.36, "3y": 3.47, "5y": 3.60 }
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "short_label": "Inget skuldkvotstak",
+        "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt via KALP (kalkylränta 6,0%). Räntan förhandlas; rabattnivå beror på belåningsgrad, övriga engagemang hos banken och förhandling."
+      }
+    },
+    {
+      "name": "SBAB",
+      "source": "https://www.sbab.se/1/privat/vara_rantor.html",
+      "type": "niche",
+      "snitt": { "3m": 2.79, "1y": 3.21, "2y": 3.42, "3y": 3.55, "4y": 3.66, "5y": 3.80, "7y": 4.01 },
+      "list": { "3m": 3.15, "1y": 3.47, "2y": 3.64, "3y": 3.79, "5y": 3.99, "10y": 4.39 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "short_label": "Transparent (LTV)",
+        "details": "Inget formellt skuldkvotstak — KALP avgör. Räntan baseras helt på belåningsgrad utan individuell förhandling. Snitt- och listränta ligger nära varandra (mindre rabattmånd än storbankerna). Extra rabatt för energiklass A/B."
+      }
     },
     {
       "name": "Länsförsäkringar",
       "source": "https://www.lansforsakringar.se/privat/bank/lana/bolan/bolanerantor/",
+      "type": "storbank",
+      "snitt": { "3m": 2.81, "1y": 3.00, "2y": 3.47, "3y": 3.60, "4y": 3.63, "5y": 3.73, "7y": 4.13 },
       "list": { "3m": 3.99, "1y": 3.59, "2y": 3.74, "3y": 3.85, "5y": 4.09, "10y": 4.50 },
-      "snitt": { "3m": 2.81 }
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "short_label": "Helkundsrabatt",
+        "details": "Räntan förhandlas; rabatt baserad på belåningsgrad. Helkundsrabatt om man samlar sparande/pension/försäkringar hos LF. Extra rabatt för grönt bolån. Låg belåningsgrad ger ytterligare ränterabatt."
+      }
+    },
+    {
+      "name": "Nordea",
+      "source": "https://www.nordea.se/privat/produkter/bolan/listrantor.html",
+      "type": "storbank",
+      "snitt": { "3m": 2.82, "1y": 3.35, "2y": 3.46, "3y": 3.54, "4y": 3.60, "5y": 3.70, "8y": 3.90 },
+      "list": { "3m": 3.99, "1y": 3.64, "2y": 3.84, "3y": 3.94, "5y": 4.09 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "short_label": "Inget skuldkvotstak",
+        "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt. KALP-kalkylränta 6,0%. Rabatt baseras på lånets storlek, bostadens värde och övriga bankengagemang (sparande, pension, andra lån)."
+      }
+    },
+    {
+      "name": "Ikano Bank",
+      "source": "https://ikanobank.se/bolan",
+      "type": "borgo",
+      "snitt": { "3m": 2.90, "1y": 3.42, "2y": 3.54, "5y": 4.37 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "lender": "Borgo",
+        "short_label": "Borgo + IKEA Family",
+        "details": "Bolånet ges av Borgo. Färdigförhandlade räntor baserade på belåningsgrad. Extra rabatt för IKEA Family-medlemmar. Lånelöfte 6 mån giltigt."
+      }
+    },
+    {
+      "name": "Hypoteket",
+      "source": "https://hypoteket.com/",
+      "type": "niche",
+      "snitt": { "3m": 2.94, "1y": 3.09, "2y": 3.16, "3y": 3.32, "5y": 3.51 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 90,
+        "short_label": "Transparent (LTV)",
+        "details": "Nischbank med transparent prissättning. Standard KALP-bedömning. Inga krav på att flytta lönekonto eller andra produkter."
+      }
+    },
+    {
+      "name": "JAK Medlemsbank",
+      "source": "https://www.jak.se/",
+      "type": "niche",
+      "snitt": { "3m": 3.26, "1y": 2.49 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 75,
+        "short_label": "Räntefri (sparpoäng)",
+        "details": "Räntefri medlemsbank — låntagaren betalar låneavgifter istället för ränta. Modellen kräver att man bygger upp sparpoäng. Snittränta motsvarar effektiv kostnad. Medlemskap krävs."
+      }
+    },
+    {
+      "name": "Avanza Bank",
+      "source": "https://www.avanza.se/private-banking-pro/private-banking/superbolanet-pb/allman-information-bolan.html",
+      "type": "pb",
+      "snitt": { "3m": 2.15 },
+      "criteria": {
+        "max_dti": 6.0,
+        "max_ltv_pct": 60,
+        "min_loan_kr": 1000000,
+        "max_loan_kr": 10000000,
+        "short_label": "Min 3 Mkr hos Avanza",
+        "details": "Superbolånet PB — kräver Private Banking-status: ≥3 Mkr i samlat kapital hos Avanza (pension + portfölj räknas). Max 50–60% belåningsgrad. Min 1 Mkr lån, max 10 Mkr. Endast permanentboende (villor typkod 220, BRF). Bara 3 mån bindning. Räntan = Riksbankens reporänta + marginal. Inga aviavgifter."
+      }
+    },
+    {
+      "name": "Nordnet",
+      "source": "https://www.nordnet.se/tjanster/lan/bolan/private-banking",
+      "type": "pb",
+      "snitt": { "3m": 2.10 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 50,
+        "short_label": "Förmögenhetsbaserad",
+        "details": "Private Banking — räntan beror på samlat kapital hos Nordnet. Spann 1,75%–3,31% (april 2026). Lägsta rabatt: minst 70 Mkr hos Nordnet. Max 50% belåning, max ett bolån per kund. Tjänstepension och bolagstillgångar räknas (vid ≥25% ägande). Kvartalsvis villkorsändring."
+      }
+    },
+    {
+      "name": "Marginalen Bank",
+      "source": "https://www.marginalen.se/",
+      "type": "subprime",
+      "snitt": { "3m": 5.86 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 85,
+        "short_label": "Second-tier",
+        "details": "Nischlångivare med högre räntor — riktar sig till kunder som inte fått lån hos storbankerna. Standard KALP-bedömning. Ofta acceptans av betalningsanmärkningar mot högre ränta."
+      }
+    },
+    {
+      "name": "Svea Bank",
+      "source": "https://www.svea.com/se/sv/privat/spara/",
+      "type": "subprime",
+      "snitt": { "3m": 6.27 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 85,
+        "short_label": "Second-tier",
+        "details": "Specialiserad på kunder med utmaningar i traditionella bankers kreditbedömning. Högre ränta, mer flexibel kreditbedömning. Lånet matchas mot säkerhet i bostaden."
+      }
+    },
+    {
+      "name": "Bluestep Bank (Enity)",
+      "source": "https://www.bluestep.se/",
+      "type": "subprime",
+      "snitt": { "1y": 6.42, "2y": 6.26, "3y": 6.16, "5y": 6.37 },
+      "criteria": {
+        "max_dti": null,
+        "max_ltv_pct": 85,
+        "short_label": "Subprime / second-lien",
+        "details": "Riktar sig till kunder med komplex bakgrund (betalningsanmärkningar, oregelbunden inkomst, egenföretagare). Högre räntor men mer flexibel bedömning än storbankerna. Ofta första steget mot konsolidering hos storbank."
+      }
     }
   ]
 }

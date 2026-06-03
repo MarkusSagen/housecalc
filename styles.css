@@ -675,3 +675,72 @@ button.ghost {
   outline: 2px solid var(--accent-2);
   outline-offset: 1px;
 }
+
+.bank-type {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.08rem 0.4rem;
+  border-radius: 3px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  border: 1px solid transparent;
+}
+.bank-type--storbank  { background: #eaf1fb; color: #1a4480; border-color: #c4d6f0; }
+.bank-type--niche     { background: #e9f6ec; color: #2a7f3e; border-color: #c4e2cb; }
+.bank-type--borgo     { background: #fdf1e0; color: #b85c00; border-color: #f3d7a8; }
+.bank-type--pb        { background: #fff5d6; color: #8a6800; border-color: #f0dc8e; }
+.bank-type--subprime  { background: #fbe7e6; color: #b3261e; border-color: #f0c1be; }
+
+.bank-rates-table .bank-krav {
+  font-size: 0.85rem;
+  color: var(--text);
+  white-space: normal;
+  max-width: 11rem;
+  cursor: help;
+  border-bottom: 1px dotted var(--border);
+}
+
+.bank-rates-explainer {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+.bank-rates-explainer > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--accent);
+  list-style: none;
+  padding: 0.25rem 0;
+}
+.bank-rates-explainer > summary::before {
+  content: "▸ ";
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.bank-rates-explainer[open] > summary::before { transform: rotate(90deg); }
+.bank-rates-explainer > summary::-webkit-details-marker { display: none; }
+.explainer-body {
+  margin-top: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem 1.5rem;
+}
+.explainer-body h4 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin: 0 0 0.25rem;
+  font-weight: 600;
+}
+.explainer-body p {
+  font-size: 0.85rem;
+  margin: 0;
+  line-height: 1.55;
+  color: var(--text);
+}
+.explainer-body p strong { color: var(--accent); }
