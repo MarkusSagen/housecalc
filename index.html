@@ -193,20 +193,39 @@
           <strong>Listränta</strong> = annonserad ränta före rabatt. <strong>Snittränta</strong> = vad bankens kunder i genomsnitt fick under <span id="rates-period">—</span> (FI:s månadsrapportering).
         </div>
       </div>
+      <div class="bank-rates-filters" role="group" aria-label="Filtrera banker efter typ">
+        <span class="filter-label">Visa:</span>
+        <button type="button" class="bank-filter is-active" data-type="storbank">
+          <span class="bank-dot bank-dot--storbank"></span>Storbank
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="niche">
+          <span class="bank-dot bank-dot--niche"></span>Nischbank
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="borgo">
+          <span class="bank-dot bank-dot--borgo"></span>Borgo
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="pb">
+          <span class="bank-dot bank-dot--pb"></span>Private Banking
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="subprime">
+          <span class="bank-dot bank-dot--subprime"></span>Second-tier
+        </button>
+      </div>
       <div class="bank-rates-scroll">
         <table class="bank-rates-table">
           <thead>
             <tr>
-              <th>Bank</th>
-              <th>Listränta<br>3 mån</th>
-              <th>Snittränta<br>3 mån</th>
+              <th class="sortable" data-sort="name">Bank <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable" data-sort="list3m">Listränta<br>3 mån <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable is-sorted" data-sort="snitt3m">Snittränta<br>3 mån <span class="sort-arrow" aria-hidden="true">▲</span></th>
               <th>Krav</th>
-              <th>Din månadskostnad<br>vid snittränta</th>
+              <th class="sortable" data-sort="monthly">Din månadskostnad<br>vid snittränta <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable" data-sort="type">Typ <span class="sort-arrow" aria-hidden="true"></span></th>
               <th></th>
             </tr>
           </thead>
           <tbody id="bank-rates-body">
-            <tr><td colspan="6" class="muted">Laddar räntor…</td></tr>
+            <tr><td colspan="7" class="muted">Laddar räntor…</td></tr>
           </tbody>
         </table>
       </div>

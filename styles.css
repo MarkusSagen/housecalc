@@ -694,23 +694,102 @@ button.ghost {
   outline-offset: 1px;
 }
 
-.bank-type {
-  display: inline-block;
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 0.08rem 0.4rem;
-  border-radius: 3px;
-  margin-left: 0.4rem;
-  vertical-align: middle;
-  border: 1px solid transparent;
+/* Filter chips above the bank rates table */
+.bank-rates-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.85rem;
+  align-items: center;
 }
-.bank-type--storbank  { background: #eaf1fb; color: #1a4480; border-color: #c4d6f0; }
-.bank-type--niche     { background: #e9f6ec; color: #2a7f3e; border-color: #c4e2cb; }
-.bank-type--borgo     { background: #fdf1e0; color: #b85c00; border-color: #f3d7a8; }
-.bank-type--pb        { background: #fff5d6; color: #8a6800; border-color: #f0dc8e; }
-.bank-type--subprime  { background: #fbe7e6; color: #b3261e; border-color: #f0c1be; }
+.bank-rates-filters .filter-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-right: 0.3rem;
+}
+.bank-filter {
+  background: white;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 0.3rem 0.75rem 0.3rem 0.6rem;
+  font-size: 0.82rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 500;
+  user-select: none;
+  transition: opacity 0.12s, background 0.12s;
+}
+.bank-filter:hover { background: var(--bg); }
+.bank-filter:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.bank-filter:not(.is-active) {
+  opacity: 0.55;
+  text-decoration: line-through;
+}
+
+/* Color dot — used in the filter chips and as a visual cue elsewhere */
+.bank-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.bank-dot--storbank { background: #1a4480; }
+.bank-dot--niche    { background: #2a7f3e; }
+.bank-dot--borgo    { background: #b85c00; }
+.bank-dot--pb       { background: #8a6800; }
+.bank-dot--subprime { background: #b3261e; }
+
+/* Row left-border colored by bank type */
+.bank-rates-table tbody tr td:first-child {
+  border-left: 4px solid transparent;
+  padding-left: 0.55rem;
+}
+.bank-rates-table tbody tr.bank-row--storbank td:first-child { border-left-color: #1a4480; }
+.bank-rates-table tbody tr.bank-row--niche    td:first-child { border-left-color: #2a7f3e; }
+.bank-rates-table tbody tr.bank-row--borgo    td:first-child { border-left-color: #b85c00; }
+.bank-rates-table tbody tr.bank-row--pb       td:first-child { border-left-color: #8a6800; }
+.bank-rates-table tbody tr.bank-row--subprime td:first-child { border-left-color: #b3261e; }
+
+/* Type column on the right */
+.bank-type-label {
+  font-size: 0.78rem;
+  white-space: nowrap;
+  color: var(--muted);
+  font-weight: 500;
+}
+.bank-type-label--storbank { color: #1a4480; }
+.bank-type-label--niche    { color: #2a7f3e; }
+.bank-type-label--borgo    { color: #b85c00; }
+.bank-type-label--pb       { color: #8a6800; }
+.bank-type-label--subprime { color: #b3261e; }
+
+/* Sortable headers */
+.bank-rates-table th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.bank-rates-table th.sortable:hover { color: var(--accent); }
+.bank-rates-table th.sortable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.bank-rates-table th.is-sorted {
+  color: var(--accent);
+}
+.sort-arrow {
+  display: inline-block;
+  min-width: 0.8em;
+  font-size: 0.7rem;
+  margin-left: 0.2rem;
+  opacity: 0.85;
+}
 
 .bank-rates-table .bank-krav {
   font-size: 0.85rem;

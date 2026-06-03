@@ -584,39 +584,93 @@ const BANK_TYPE_LABEL = {
   subprime: "Second-tier",
 };
 
+const bankSort = { column: "snitt3m", dir: "asc" };
+const bankHiddenTypes = new Set();
+
 function escapeAttr(s) {
   return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
+function decorateBank(b, r) {
+  const list3m = b.list?.["3m"] ?? null;
+  const snitt3m = b.snitt?.["3m"] ?? null;
+  // Pick the best available rate for the monthly-cost column.
+  const rateForCalc = snitt3m ?? list3m ?? Object.values(b.snitt ?? {})[0] ?? 0;
+  const interest = Math.round((r.loan * rateForCalc) / 100 / 12);
+  const monthly = interest + r.monthlyAmort + r.monthlyFee;
+  return { bank: b, list3m, snitt3m, rateForCalc, monthly };
+}
+
+function bankSortValue(d, column) {
+  switch (column) {
+    case "name": return (d.bank.name ?? "").toLowerCase();
+    case "list3m": return d.list3m ?? Number.POSITIVE_INFINITY;
+    case "snitt3m": return d.snitt3m ?? d.rateForCalc ?? Number.POSITIVE_INFINITY;
+    case "monthly": return d.monthly ?? Number.POSITIVE_INFINITY;
+    case "type": return d.bank.type ?? "";
+    default: return 0;
+  }
+}
+
+function sortDecorated(decorated) {
+  const { column, dir } = bankSort;
+  const factor = dir === "asc" ? 1 : -1;
+  return [...decorated].sort((a, b) => {
+    const av = bankSortValue(a, column);
+    const bv = bankSortValue(b, column);
+    if (typeof av === "string") return av.localeCompare(bv, "sv") * factor;
+    return (av - bv) * factor;
+  });
+}
+
+function updateSortIndicators() {
+  $$(".bank-rates-table th.sortable").forEach((th) => {
+    const col = th.dataset.sort;
+    const arrow = th.querySelector(".sort-arrow");
+    if (!arrow) return;
+    if (col === bankSort.column) {
+      arrow.textContent = bankSort.dir === "asc" ? "▲" : "▼";
+      th.classList.add("is-sorted");
+      th.setAttribute("aria-sort", bankSort.dir === "asc" ? "ascending" : "descending");
+    } else {
+      arrow.textContent = "";
+      th.classList.remove("is-sorted");
+      th.setAttribute("aria-sort", "none");
+    }
+  });
+}
+
 function renderBankRates(p, r) {
   if (!bankRatesData) return;
+  const decorated = bankRatesData.banks
+    .map((b) => decorateBank(b, r))
+    .filter((d) => !bankHiddenTypes.has(d.bank.type));
+  const sorted = sortDecorated(decorated);
+
   const tbody = $("#bank-rates-body");
+  if (sorted.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="muted">Inga banker matchar filtret.</td></tr>`;
+    updateSortIndicators();
+    return;
+  }
 
-  const rows = bankRatesData.banks.map((b) => {
-    const list3m = b.list?.["3m"] ?? null;
-    const snitt3m = b.snitt?.["3m"] ?? null;
-    // Pick the best available rate for the monthly-cost column.
-    const rateForCalc = snitt3m ?? list3m ?? Object.values(b.snitt ?? {})[0] ?? 0;
-
-    const interest = Math.round((r.loan * rateForCalc) / 100 / 12);
-    const monthly = interest + r.monthlyAmort + r.monthlyFee;
-
+  const rows = sorted.map(({ bank: b, list3m, snitt3m, rateForCalc, monthly }) => {
     const c = b.criteria ?? {};
-    const typeBadge = b.type
-      ? `<span class="bank-type bank-type--${b.type}">${BANK_TYPE_LABEL[b.type] ?? b.type}</span>`
-      : "";
     const krav = c.short_label ?? "—";
     const kravTitle = c.details ? escapeAttr(c.details) : "";
+    const typeLabel = BANK_TYPE_LABEL[b.type] ?? b.type ?? "";
+    const typeClass = b.type ? `bank-row bank-row--${b.type}` : "bank-row";
 
-    return `<tr>
+    return `<tr class="${typeClass}">
       <td>
-        <div class="bank-name">${b.name} ${typeBadge}</div>
+        <div class="bank-name">${b.name}</div>
         <div class="bank-source"><a href="${b.source}" target="_blank" rel="noopener noreferrer">→ källa</a></div>
       </td>
       <td>${list3m !== null ? fmtPct(list3m) : "—"}</td>
       <td>${snitt3m !== null ? fmtPct(snitt3m) : "—"}</td>
       <td class="bank-krav" title="${kravTitle}">${krav}</td>
       <td><strong>${fmtMon(monthly)}</strong></td>
+      <td><span class="bank-type-label bank-type-label--${b.type}">${typeLabel}</span></td>
       <td><button type="button" class="bank-apply" data-rate="${rateForCalc}" aria-label="Använd ${b.name} snittränta">Räkna med</button></td>
     </tr>`;
   });
@@ -625,6 +679,48 @@ function renderBankRates(p, r) {
 
   $$(".bank-apply").forEach((btn) => {
     btn.addEventListener("click", () => applyRate(+btn.dataset.rate));
+  });
+  updateSortIndicators();
+}
+
+function wireBankRatesUI() {
+  $$(".bank-rates-table th.sortable").forEach((th) => {
+    th.setAttribute("role", "button");
+    th.setAttribute("tabindex", "0");
+    const handler = () => {
+      const col = th.dataset.sort;
+      if (bankSort.column === col) {
+        bankSort.dir = bankSort.dir === "asc" ? "desc" : "asc";
+      } else {
+        bankSort.column = col;
+        bankSort.dir = col === "name" || col === "type" ? "asc" : "asc";
+      }
+      renderLiveSummary();
+    };
+    th.addEventListener("click", handler);
+    th.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        handler();
+      }
+    });
+  });
+
+  $$(".bank-filter").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const type = btn.dataset.type;
+      if (bankHiddenTypes.has(type)) {
+        bankHiddenTypes.delete(type);
+        btn.classList.add("is-active");
+        btn.setAttribute("aria-pressed", "true");
+      } else {
+        bankHiddenTypes.add(type);
+        btn.classList.remove("is-active");
+        btn.setAttribute("aria-pressed", "false");
+      }
+      renderLiveSummary();
+    });
+    btn.setAttribute("aria-pressed", "true");
   });
 }
 
@@ -639,6 +735,7 @@ function applyRate(newRate) {
 
 // init
 buildCompareTable();
+wireBankRatesUI();
 syncFromPriceOrPct();
 renderLiveSummary();
 loadBankRates();
