@@ -11,3 +11,7 @@ dev port='8000':
 # Open the running app in the default browser
 open:
     open http://127.0.0.1:8000/
+
+# Run unit tests for calc.js (Node 18+ required)
+test:
+    node --test test/calc.test.js
