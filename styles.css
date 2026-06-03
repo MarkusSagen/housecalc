@@ -841,3 +841,76 @@ button.ghost {
   color: var(--text);
 }
 .explainer-body p strong { color: var(--accent); }
+
+/* Freshness tag next to "Senast uppdaterad" */
+.freshness-tag {
+  display: inline-block;
+  margin-left: 0.2rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.freshness-tag.is-stale {
+  color: var(--warn);
+  font-weight: 600;
+  cursor: help;
+}
+.freshness-tag.is-very-stale {
+  color: var(--bad);
+  font-weight: 600;
+  cursor: help;
+}
+
+/* Per-bank quick-reference table inside the explainer */
+.explainer-h3 {
+  margin: 1.25rem 0 0.35rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.explainer-scroll { overflow-x: auto; margin-top: 0.4rem; }
+.explainer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  min-width: 540px;
+}
+.explainer-table th {
+  text-align: left;
+  padding: 0.4rem 0.6rem 0.4rem 0;
+  border-bottom: 2px solid var(--border);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.explainer-table td {
+  padding: 0.45rem 0.6rem 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.4;
+}
+.explainer-table tr:last-child td { border-bottom: none; }
+.explainer-table td:first-child {
+  font-weight: 600;
+  white-space: nowrap;
+}
+.explainer-table td em { color: var(--muted); font-style: normal; }
+
+.explainer-list {
+  font-size: 0.85rem;
+  margin: 0.4rem 0 0.5rem;
+  padding-left: 1.2rem;
+}
+.explainer-list li {
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+.explainer-list a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.explainer-list a:hover { text-decoration: underline; }

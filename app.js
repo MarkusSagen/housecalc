@@ -569,7 +569,32 @@ async function loadBankRates() {
   }
   $("#rates-period").textContent = bankRatesData.snittranta_period;
   $("#bank-rates-updated").textContent = bankRatesData.updated;
+  renderFreshness(bankRatesData.updated);
   renderLiveSummary();
+}
+
+function renderFreshness(updatedStr) {
+  const el = $("#bank-rates-freshness");
+  if (!el || !updatedStr) return;
+  const updated = new Date(`${updatedStr}T00:00:00`);
+  if (Number.isNaN(updated.getTime())) {
+    el.textContent = "";
+    return;
+  }
+  const days = Math.max(
+    0,
+    Math.floor((Date.now() - updated.getTime()) / 86_400_000),
+  );
+  el.textContent =
+    days === 0 ? "(idag)" : days === 1 ? "(1 dag sedan)" : `(${days} dagar sedan)`;
+  el.classList.toggle("is-stale", days > 35 && days <= 60);
+  el.classList.toggle("is-very-stale", days > 60);
+  if (days > 35) {
+    el.title =
+      "Snitträntorna publiceras månadsvis — datan här är äldre än en publiceringscykel. Uppdatera rates.json.";
+  } else {
+    el.removeAttribute("title");
+  }
 }
 
 function fmtPct(n) {

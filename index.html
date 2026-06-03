@@ -230,7 +230,7 @@
         </table>
       </div>
       <p class="small muted" style="margin-top:0.5rem">
-        Senast uppdaterad <span id="bank-rates-updated">—</span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Hovra över <em>Krav</em>-cellen för mer detaljer. Räntor uppdateras månadsvis — redigera <code>rates.json</code> för att uppdatera.
+        Senast uppdaterad <span id="bank-rates-updated">—</span> <span id="bank-rates-freshness" class="freshness-tag"></span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Hovra över <em>Krav</em>-cellen för mer detaljer. Räntor uppdateras månadsvis — redigera <code>rates.json</code> för att uppdatera.
       </p>
 
       <details class="bank-rates-explainer">
@@ -249,6 +249,40 @@
           <h4>Second-tier (Bluestep, Marginalen, Svea)</h4>
           <p>Riktar sig till kunder som inte fått lån hos storbanker (betalningsanmärkningar, oregelbunden inkomst, egenföretagare). Räntor 5–6%. Ofta första steget mot konsolidering hos storbank.</p>
         </div>
+
+        <h3 class="explainer-h3">Skuldkvotstak per bank — snabbreferens</h3>
+        <p class="small muted">Bankernas <em>egna</em> regler. Det finns inget lagstadgat tak sedan 2026-04-01.</p>
+        <div class="explainer-scroll">
+          <table class="explainer-table">
+            <thead>
+              <tr><th>Bank</th><th>Internt skuldkvotstak</th><th>Kommentar</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Nordea</td><td><em>Inget formellt</em></td><td>Bedömer betalförmåga helhetligt via KALP.</td></tr>
+              <tr><td>Handelsbanken</td><td><em>Inget formellt</em></td><td>KALP avgör; kalkylränta 6,0%.</td></tr>
+              <tr><td>SBAB</td><td><em>Inget formellt</em></td><td>Transparent LTV-prissättning utan individuell förhandling.</td></tr>
+              <tr><td>Skandiabanken</td><td>~5×</td><td>Riktmärke 500%. Faktisk gräns sätts via KALP.</td></tr>
+              <tr><td>Swedbank</td><td>4,5×</td><td>Bankens generella regel. Kalkylränta ~6,4%.</td></tr>
+              <tr><td>SEB</td><td>~6× (individuellt)</td><td>Kalkylränta 6–7%. Förhandlas per kund.</td></tr>
+              <tr><td>Danske Bank</td><td>~6× (individuellt)</td><td>Kalkylränta 6,0%.</td></tr>
+              <tr><td>Stabelo</td><td>6×</td><td>Transparent prissättning, ingen förhandling.</td></tr>
+              <tr><td>Avanza (PB)</td><td>6×</td><td>Endast Private Banking (≥3 Mkr hos Avanza). Max 50–60% LTV.</td></tr>
+              <tr><td>Nordnet (PB)</td><td><em>Inget formellt</em></td><td>Räntan trappas efter förmögenhet. Max 50% LTV.</td></tr>
+              <tr><td>Landshypotek</td><td><em>Inget formellt</em></td><td>Publicerar 85% LTV-tak (predaterar 2026-04-01-höjningen). Min 750k lån för rabatt.</td></tr>
+              <tr><td>Borgo-bankerna<br>(ICA / Ikano / Ålandsbanken)</td><td><em>Inget formellt</em></td><td>Tre varumärken, ett bolåneprodukt. Standard KALP-bedömning.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="explainer-h3">Var hittar man färska räntor?</h3>
+        <p class="small muted">Bankerna är enligt FI skyldiga att publicera <strong>snitträntor månadsvis</strong>, senast 5 arbetsdagar efter månadsslut. Lättast att hämta från jämförsajter:</p>
+        <ul class="explainer-list">
+          <li><a href="https://www.konsumenternas.se/konsumentstod/jamforelser/lan--betalningar/lan/jamfor-borantor/" target="_blank" rel="noopener noreferrer">Konsumenternas.se</a> — oberoende myndighetstjänst.</li>
+          <li><a href="https://www.compricer.se/borantor/" target="_blank" rel="noopener noreferrer">Compricer.se</a> — uppdateras inom timmar efter en justering.</li>
+          <li><a href="https://finansvalp.se/lana-pengar/bolan/jamfor" target="_blank" rel="noopener noreferrer">Finansvalp.se</a></li>
+          <li><a href="https://www.finansportalen.se/snittrantor/" target="_blank" rel="noopener noreferrer">Finansportalen.se</a></li>
+        </ul>
+        <p class="small muted">För att uppdatera den här sidan: redigera <code>rates.json</code>, bumpa <code>updated</code> + <code>snittranta_period</code>. Klar.</p>
       </details>
     </section>
 
