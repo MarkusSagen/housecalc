@@ -74,12 +74,12 @@ function ranteavdragMonthlyCredit(monthlyInterestKr) {
   return Math.floor(credit / 12);
 }
 
-function recommendedAmortPct(ltvPct, dti) {
-  let pct = 0;
-  if (ltvPct > 70) pct = 2;
-  else if (ltvPct > 50) pct = 1;
-  if (dti > 4.5) pct += 1;
-  return pct;
+// Amortization tiers under lag 2026:226 (effective 2026-04-01).
+// The +1% rule for DTI > 4.5× (skärpta amorteringskravet) was abolished on the same date.
+function recommendedAmortPct(ltvPct) {
+  if (ltvPct > 70) return 2;
+  if (ltvPct > 50) return 1;
+  return 0;
 }
 
 function computeForPrice(price, params) {
@@ -184,13 +184,13 @@ function renderLiveSummary() {
   $("#hc-ltv").textContent = `${r.ltv.toFixed(1)}%`;
 
   hpMeta.textContent = `${p.hpPct.toFixed(1)}% av priset · LTV ${r.ltv.toFixed(1)}%`;
-  const recAmort = recommendedAmortPct(r.ltv, dti);
-  amortMeta.textContent = `FI rekommenderar ${recAmort.toFixed(1)}% (LTV-tier${dti > 4.5 ? " + DTI" : ""})`;
+  const recAmort = recommendedAmortPct(r.ltv);
+  amortMeta.textContent = `Lagstadgad minimi-amortering: ${recAmort}% (LTV-tier)`;
 
   updateSliderProgress();
   renderInsights(p, r, dti);
   updateCompareValues(p);
-  renderPayoff(p, r, dti);
+  renderPayoff(p, r);
 }
 
 function updateSliderProgress() {
@@ -222,11 +222,11 @@ function renderInsights(p, r, dti) {
   if (p.grossIncome > 0 && r.loan > 0) {
     $("#ins-dti").textContent = `${dti.toFixed(1)}×`;
     if (dti > 4.5) {
-      $("#ins-dti-extra").innerHTML =
-        "Lånet är över 4,5× årsinkomsten → <strong>+1% extra amorteringskrav</strong>.";
+      $("#ins-dti-extra").textContent =
+        "Hög skuldkvot — bankens individuella bedömning kan påverkas, men skärpta amorteringskravet (+1%) togs bort 2026-04-01.";
     } else {
       $("#ins-dti-extra").textContent =
-        "Lånet är under 4,5× årsinkomsten — inget extra amorteringskrav.";
+        "Under 4,5× — bankens vanliga tröskelvärde för låg risk.";
     }
     $("#ins-dti-card").hidden = false;
   } else {
@@ -280,7 +280,7 @@ function renderInsights(p, r, dti) {
 
 // ===== Payoff projection =====
 
-function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, maxYears = 50) {
+function projectPayoff(initialLoan, initialPrice, rate, appreciationPct, maxYears = 50) {
   const fiSeries = [];
   const voluntarySeries = [];
   let remainingFi = initialLoan;
@@ -303,7 +303,7 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
 
     // FI track
     const ltvFi = (remainingFi / houseValue) * 100;
-    const amortPctFi = recommendedAmortPct(ltvFi, dti);
+    const amortPctFi = recommendedAmortPct(ltvFi);
     const annualAmortFi = (amortPctFi / 100) * initialLoan;
     const paidFi = Math.min(annualAmortFi, remainingFi);
     remainingFi = Math.max(0, remainingFi - paidFi);
@@ -339,9 +339,9 @@ function projectPayoff(initialLoan, initialPrice, rate, dti, appreciationPct, ma
   };
 }
 
-function renderPayoff(p, r, dti) {
+function renderPayoff(p, r) {
   const appreciation = parseFloat(appreciationInput.value || "0");
-  const proj = projectPayoff(r.loan, p.price, p.rate, dti, appreciation, 50);
+  const proj = projectPayoff(r.loan, p.price, p.rate, appreciation, 50);
 
   $("#po-tier-1").textContent = proj.yearTier1 !== null ? `${proj.yearTier1} år` : "—";
   $("#po-tier-0").textContent = proj.yearTier0 !== null ? `${proj.yearTier0} år` : "—";
