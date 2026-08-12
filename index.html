@@ -3772,8 +3772,11 @@ async function exportXlsx() {
 
   const KR = '#,##0" kr"';
   const KRM = '#,##0" kr/mån"';
-  const PCT1 = '0.0" %"';
-  const PCT2 = '0.00" %"';
+  // Percent cells: store the value as a fraction (0.0254) with a real percent
+  // format so Excel, Numbers and Sheets all display "2,54%". Storing 2.54 with
+  // a %-format makes Numbers treat it as 254% on import.
+  const PCT1 = "0.0%";
+  const PCT2 = "0.00%";
   const FILL = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDDE3EC" } };
 
   const wb = new ExcelJS.Workbook();
@@ -3815,12 +3818,12 @@ async function exportXlsx() {
   addSection("FÖRUTSÄTTNINGAR");
   addRow("Förväntat slutpris", p.price, KR);
   addRow("Kontantinsats", r.hpTotal, KR);
-  addRow("Ränta", p.rate, PCT2);
-  addRow("Amortering", p.amort, PCT1);
+  addRow("Ränta", p.rate / 100, PCT2);
+  addRow("Amortering", p.amort / 100, PCT1);
   addRow("Avgift / drift", r.monthlyFee, KRM);
   addRow("Befintliga pantbrev", p.existingPantbrev, KR);
   addRow("Bolån", r.loan, KR);
-  addRow("LTV", Math.round(r.ltv * 10) / 10, PCT1);
+  addRow("LTV", r.ltv / 100, PCT1);
   blank();
 
   addSection("MÅNADSKOSTNAD");
