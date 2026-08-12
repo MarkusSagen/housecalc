@@ -11,22 +11,17 @@ All text i den exporterade filen är på **svenska** (inget språkval).
 ## Format
 
 En äkta `.xlsx`-fil (öppnas rent i Excel / Numbers / Google Sheets utan
-reparationsvarningar). Ingen tung tredjepartsberoende läggs till — appen är
-ett enda `index.html`.
+reparationsvarningar).
 
-En liten självständig skrivare (~180 rader vanilla JS) läggs till i det
-befintliga `<script>`-blocket:
+**Vald metod:** ExcelJS 4.4.0 **inbäddat direkt i `index.html`** (samma mönster
+som Chart.js redan bäddas in) — inte via CDN. Detta håller appen självständig
+och offline-kapabel: exporten fungerar utan internet. (En tidigare övervägd
+handrullad skrivare valdes bort till förmån för det beprövade biblioteket.)
 
-- Bygger de sex XML-delarna i en minimal arbetsbok:
-  - `[Content_Types].xml`
-  - `_rels/.rels`
-  - `xl/workbook.xml`
-  - `xl/_rels/workbook.xml.rels`
-  - `xl/styles.xml`
-  - `xl/worksheets/sheet1.xml`
-- Packar delarna i ett ZIP-arkiv med **store-läge (ingen komprimering)** plus en
-  liten CRC32-tabell — därför behövs ingen DEFLATE och inget externt bibliotek.
-- Laddas ner via en `Blob` + temporär `<a download>`.
+- ExcelJS UMD-bundeln (~948 KB) ligger i ett eget `<script>`-block före
+  app-modulen och exponerar globalen `ExcelJS`.
+- `exportXlsx()` bygger arbetsboken via ExcelJS API och laddar ner via en
+  `Blob` + temporär `<a download>`.
 
 Belopp skrivs som **riktiga tal med Excel-talformat** så att banken kan
 summera/redigera cellerna:
