@@ -7,3 +7,10 @@
 
 # Playwright / browser-tool scratch
 .playwright-mcp/
+
+# Build
+node_modules/
+dist/
+.output/
+.wxt/
+rates-report.md

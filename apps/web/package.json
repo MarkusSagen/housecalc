@@ -1,0 +1,19 @@
+{
+  "name": "@housecalc/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@housecalc/core": "*",
+    "chart.js": "4.4.4",
+    "exceljs": "4.4.0"
+  },
+  "devDependencies": {
+    "vite": "^7.1.0"
+  }
+}

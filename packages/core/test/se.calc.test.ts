@@ -1,20 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, writeFileSync, mkdtempSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
-
-// Extract the calc block from the single-file index.html and load it as ESM.
-// The block is delimited by /* CALC-START */ ... /* CALC-END */ markers and
-// the source already contains `export` keywords (browser ignores them in an
-// inline module; Node treats them as real exports once we write to .mjs).
-const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
-const match = html.match(/\/\* CALC-START \*\/([\s\S]*?)\/\* CALC-END \*\//);
-if (!match) throw new Error("CALC block not found in index.html");
-const tmpFile = join(mkdtempSync(join(tmpdir(), "housecalc-")), "calc.mjs");
-writeFileSync(tmpFile, match[1]);
-const {
+import {
   ranteavdragMonthlyCredit,
   recommendedAmortPct,
   computeForPrice,
@@ -25,7 +11,7 @@ const {
   AMORT_PCT_MID,
   AMORT_PCT_LOW,
   RANTEAVDRAG_CAP_ANNUAL,
-} = await import(pathToFileURL(tmpFile).href);
+} from "../src/markets/se/index.ts";
 
 // =============================================================================
 // ranteavdragMonthlyCredit
@@ -195,7 +181,7 @@ test("projectPayoff: appreciation accelerates the tier drops", () => {
   // With house appreciation, LTV falls faster — tier drops should happen at or before
   // the no-appreciation timeline. Equality counts as "not later".
   assert.ok(
-    withApp.yearTier1 !== null && withApp.yearTier1 <= noApp.yearTier1,
+    withApp.yearTier1 !== null && noApp.yearTier1 !== null && withApp.yearTier1 <= noApp.yearTier1,
     `yearTier1 should drop earlier with appreciation (got ${withApp.yearTier1} vs ${noApp.yearTier1})`,
   );
 });
