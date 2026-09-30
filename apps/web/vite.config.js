@@ -9,7 +9,8 @@ const stripTags = (html) =>
     .trim();
 
 // Build-time SEO: FAQPage JSON-LD mirrors the visible #faq section (so the two
-// can't drift), and robots.txt + sitemap.xml are emitted with the real site URL.
+// can't drift); robots.txt + sitemap.xml are emitted with the real site URL, and
+// rates/se.json is published for the browser extension.
 function seo(siteUrl) {
   return {
     name: "housecalc-seo",
@@ -29,7 +30,10 @@ function seo(siteUrl) {
       );
     },
     generateBundle() {
-      const rates = JSON.parse(readFileSync(new URL("../../data/rates/se.json", import.meta.url), "utf8"));
+      const ratesJson = readFileSync(new URL("../../data/rates/se.json", import.meta.url), "utf8");
+      const rates = JSON.parse(ratesJson);
+      // Public copy for the browser extension to refresh from (data, not code).
+      this.emitFile({ type: "asset", fileName: "rates/se.json", source: ratesJson });
       this.emitFile({
         type: "asset",
         fileName: "robots.txt",

@@ -200,3 +200,32 @@ test("projectPayoff: totalInterestFi30 is positive and grows with rate", () => {
   assert.ok(r3.totalInterestFi30 > 0);
   assert.ok(r5.totalInterestFi30 > r3.totalInterestFi30);
 });
+
+// =============================================================================
+// tenure (upplåtelseform)
+// =============================================================================
+
+const TENURE_BASE = { hpPct: 15, existingPantbrev: 0, rate: 3, amort: 2, monthlyFee: 4_000 };
+
+test("tenure: äganderätt (default) pays lagfart and pantbrev", () => {
+  const r = computeForPrice(3_000_000, TENURE_BASE);
+  assert.equal(r.lagfart, 45_000 + 825);
+  assert.equal(r.pantbrev, Math.round(0.02 * 2_550_000) + 375);
+  assert.deepEqual(computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "aganderatt" }), r);
+});
+
+test("tenure: tomträtt registers like äganderätt", () => {
+  const r = computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "tomtratt" });
+  assert.equal(r.lagfart, 45_825);
+  assert.ok(r.pantbrev > 0);
+});
+
+test("tenure: bostadsrätt has no lagfart or pantbrev; monthly costs unchanged", () => {
+  const house = computeForPrice(3_000_000, TENURE_BASE);
+  const br = computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "bostadsratt" });
+  assert.equal(br.lagfart, 0);
+  assert.equal(br.pantbrev, 0);
+  assert.equal(br.onetimeTotal, br.hpTotal);
+  assert.equal(br.monthlyTotal, house.monthlyTotal);
+  assert.equal(br.monthlyAfterTax, house.monthlyAfterTax);
+});

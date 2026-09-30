@@ -3,7 +3,16 @@
 // track. The UI, the extension and the rates pipeline only talk to this
 // interface, so adding a country means adding one folder under markets/.
 
+/**
+ * Upplåtelseform. It decides the one-time costs: only freehold (äganderätt) and
+ * site leasehold (tomträtt) register title and mortgage deeds; a bostadsrätt
+ * is pledged through the association, so it has no lagfart or pantbrev.
+ */
+export type Tenure = "aganderatt" | "tomtratt" | "bostadsratt";
+
 export interface PurchaseParams {
+  /** Defaults to "aganderatt". */
+  tenure?: Tenure;
   /** Down payment as % of price. */
   hpPct: number;
   /** Mortgage deeds (pantbrev) already on the property, in currency units. */
