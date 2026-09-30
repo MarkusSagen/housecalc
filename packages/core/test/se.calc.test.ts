@@ -188,7 +188,7 @@ test("projectPayoff: appreciation accelerates the tier drops", () => {
 
 test("projectPayoff: zero loan returns immediately-paid-off projections", () => {
   const proj = projectPayoff(0, 8_500_000, 3.0, 0, 10);
-  assert.equal(proj.fiSeries[0].remaining, 0);
+  assert.equal(proj.fiSeries[0]?.remaining, 0);
   // yearPaidOffFi is only set when remainingFi reaches <= 0 INSIDE the loop, so
   // for an already-zero start it stays null. That's a known edge.
   assert.equal(proj.yearTier0, 1); // LTV is 0 from year 1

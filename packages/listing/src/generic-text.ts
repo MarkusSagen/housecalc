@@ -25,7 +25,7 @@ const isUnit = (t: string) => /^(kr|sek|kvm|m²|m2)?\s*(\/|per )?\s*(mån(ad)?|�
 /** Value text for a label at index i, joining a trailing unit node ("4 788" + "kr/mån"). */
 function valueAfter(texts: string[], i: number, numeric: boolean): string | null {
   for (let j = i + 1; j <= i + 3 && j < texts.length; j++) {
-    const t = texts[j];
+    const t = texts[j] ?? "";
     if (numeric && !hasDigit(t)) {
       // Words like "Totalt" between label and number; stop at the next label-ish text.
       if (t.length > 20) return null;
@@ -40,14 +40,14 @@ function valueAfter(texts: string[], i: number, numeric: boolean): string | null
 function find(texts: string[], key: Key, numeric: boolean): string | null {
   for (const re of LABELS[key]) {
     for (let i = 0; i < texts.length; i++) {
-      const t = texts[i];
+      const t = texts[i] ?? "";
       if (re.test(normLabel(t))) {
         const v = valueAfter(texts, i, numeric);
         if (v) return v;
       }
       // Inline form: "Avgift: 4 788 kr/mån" / "Boarea 63 m²".
       const m = t.match(/^([^\d:]{3,30}?)[:\s]\s*(\d.*)$/);
-      if (m && re.test(normLabel(m[1]))) return m[2];
+      if (m?.[1] && m[2] && re.test(normLabel(m[1]))) return m[2];
     }
   }
   return null;

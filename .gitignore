@@ -14,3 +14,4 @@ dist/
 .output/
 .wxt/
 rates-report.md
+.output-e2e/
