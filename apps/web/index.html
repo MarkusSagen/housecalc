@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bolånekalkylator 2026: räkna på månadskostnad och kontantinsats | Housecalc</title>
+  <meta name="description" content="Gratis bolånekalkylator med dagsaktuella räntor från 20 banker. Se månadskostnad efter ränteavdrag, kontantinsats, lagfart, pantbrev och amorteringskrav enligt 2026 års regler." />
+  <link rel="canonical" href="%VITE_SITE_URL%/" />
+  <meta name="theme-color" content="#1a2233" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="sv_SE" />
+  <meta property="og:site_name" content="Housecalc" />
+  <meta property="og:title" content="Bolånekalkylator: vad kostar bostaden per månad?" />
+  <meta property="og:description" content="Månadskostnad efter ränteavdrag, kontantinsats, lagfart och pantbrev, med bankernas aktuella räntor." />
+  <meta property="og:url" content="%VITE_SITE_URL%/" />
+  <meta name="twitter:card" content="summary" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Housecalc bolånekalkylator",
+    "url": "%VITE_SITE_URL%/",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Any",
+    "inLanguage": "sv-SE",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "SEK" }
+  }
+  </script>
+  <script type="application/ld+json" id="faq-jsonld"></script>
+  <link rel="stylesheet" href="/src/styles.css" />
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <h1>Bolånekalkylator <span class="brand">· Housecalc</span></h1>
+      <p class="tagline">Räkna ut månadskostnad, kontantinsats, lagfart, pantbrev och ränteavdrag när du köper bostad i Sverige</p>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-headline" aria-live="polite" aria-atomic="true">
+        <div class="hero-label">Din kommande månadsutgift</div>
+        <div class="hero-value" id="hero-monthly">— kr</div>
+        <div class="hero-sub">Efter ränteavdrag: <strong id="hero-monthly-after">— kr</strong></div>
+        <p class="hero-spread" id="hero-spread" hidden></p>
+        <button type="button" id="export-xlsx" class="hero-export-btn" aria-label="Exportera kalkylen till en Excel-fil (.xlsx)">⤓ Exportera till Excel</button>
+      </div>
+
+      <div class="hero-cards">
+        <div class="hero-card">
+          <h3>Månadskostnad</h3>
+          <div class="hc-row"><span>Ränta</span><strong id="hc-interest">— kr</strong></div>
+          <div class="hc-row"><span>Amortering</span><strong id="hc-amort">— kr</strong></div>
+          <div class="hc-row"><span>Avgift / drift</span><strong id="hc-fee">— kr</strong></div>
+          <div class="hc-row hc-total"><span>Totalt före skatt</span><strong id="hc-total">— kr</strong></div>
+        </div>
+        <div class="hero-card">
+          <h3>Engångskostnader</h3>
+          <div class="hc-row"><span>Lagfart</span><strong id="hc-lagfart">— kr</strong></div>
+          <div class="hc-row"><span>Pantbrev</span><strong id="hc-pantbrev">— kr</strong></div>
+          <div class="hc-row"><span>Kontantinsats</span><strong id="hc-kontantinsats">— kr</strong></div>
+          <div class="hc-row hc-total"><span>Totalt</span><strong id="hc-onetime-total">— kr</strong></div>
+        </div>
+        <div class="hero-card hero-card-cash">
+          <h3>Du behöver i kontanter</h3>
+          <div class="hc-cash" id="hc-total-cash">— kr</div>
+          <div class="hc-formula">
+            <div class="hcf-row"><span>Kontantinsats</span><strong id="hcf-kontant">— kr</strong></div>
+            <div class="hcf-row"><span>+ Lagfart (1,5%)</span><strong id="hcf-lagfart">— kr</strong></div>
+            <div class="hcf-row"><span>+ Pantbrev (2% av nya)</span><strong id="hcf-pantbrev">— kr</strong></div>
+          </div>
+          <div class="hc-meta">
+            <div class="hcm-row"><span>Bolån</span><strong id="hc-loan">— kr</strong></div>
+            <div class="hcm-row"><span>LTV</span><strong id="hc-ltv">—</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTROLS -->
+    <section class="controls">
+      <h2>Justera</h2>
+      <div class="control-grid">
+        <div class="control">
+          <div class="control-head">
+            <label for="price-input">Förväntat slutpris</label>
+            <div class="control-value">
+              <button type="button" class="step-btn" data-step-for="price" data-dir="-1" aria-label="Sänk slutpris">−</button>
+              <input type="text" inputmode="numeric" id="price-input" value="6 800 000" />
+              <span class="control-unit">kr</span>
+              <button type="button" class="step-btn" data-step-for="price" data-dir="1" aria-label="Höj slutpris">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider" id="price-slider" min="500000" max="20000000" step="50000" value="6800000" />
+          <div class="slider-marks">
+            <span>0,5 Mkr</span><span>5 Mkr</span><span>10 Mkr</span><span>15 Mkr</span><span>20 Mkr</span>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="hp-input">Kontantinsats <span class="control-meta" id="hp-meta">10,0% av priset</span></label>
+            <div class="control-value">
+              <button type="button" class="step-btn" data-step-for="hp" data-dir="-1" aria-label="Sänk kontantinsats">−</button>
+              <input type="text" inputmode="numeric" id="hp-input" value="680 000" />
+              <span class="control-unit">kr</span>
+              <button type="button" class="step-btn" data-step-for="hp" data-dir="1" aria-label="Höj kontantinsats">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider" id="hp-slider" min="0" max="50" step="5" value="10" />
+          <div class="slider-marks"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span><span>50%</span></div>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="rate-input">Ränta</label>
+            <div class="control-value">
+              <button type="button" class="step-btn" data-step-for="rate" data-dir="-1" aria-label="Sänk ränta">−</button>
+              <input type="number" id="rate-input" value="2.54" step="0.01" min="0" max="15" />
+              <span class="control-unit">%</span>
+              <button type="button" class="step-btn" data-step-for="rate" data-dir="1" aria-label="Höj ränta">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider" id="rate-slider" min="0" max="10" step="0.01" value="2.54" />
+          <div class="slider-marks"><span>0%</span><span>2%</span><span>4%</span><span>6%</span><span>8%</span><span>10%</span></div>
+          <div class="rate-presets">
+            <button type="button" class="rate-preset" data-rate="2.80">Snittränta ≈ 2,80%</button>
+            <button type="button" class="rate-preset" data-rate="3.95">Listränta ≈ 3,95%</button>
+            <button type="button" class="rate-preset" data-rate="3.80">3 år bunden ≈ 3,80%</button>
+          </div>
+          <small class="muted" style="margin-top:0.3rem">Listränta = annonserad. Snittränta = vad kunderna faktiskt fått. Se "Jämför banker" nedan för aktuella siffror per bank.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="amort-input">Amortering <span class="control-meta" id="amort-meta">—</span></label>
+            <div class="control-value">
+              <button type="button" class="step-btn" data-step-for="amort" data-dir="-1" aria-label="Sänk amortering">−</button>
+              <input type="number" id="amort-input" value="2.0" step="0.1" min="0" max="10" />
+              <span class="control-unit">%</span>
+              <button type="button" class="step-btn" data-step-for="amort" data-dir="1" aria-label="Höj amortering">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider" id="amort-slider" min="0" max="5" step="0.1" value="2.0" />
+          <div class="slider-marks"><span>0%</span><span>1%</span><span>2%</span><span>3%</span><span>4%</span><span>5%</span></div>
+        </div>
+
+        <div class="control control-row-input">
+          <div class="control-head">
+            <label for="existing-pantbrev-input">Befintliga pantbrev</label>
+            <div class="control-value">
+              <input type="text" inputmode="numeric" id="existing-pantbrev-input" value="2 248 000" />
+              <span class="control-unit">kr</span>
+            </div>
+          </div>
+          <small class="muted" style="margin-top:0.3rem">Anges på bostadsannonsen. Du betalar bara 2% stämpelskatt på <em>nya</em> pantbrev utöver det här beloppet.</small>
+        </div>
+
+        <div class="control">
+          <div class="control-head">
+            <label for="fee-input">Avgift / drift per månad</label>
+            <div class="control-value">
+              <button type="button" class="step-btn" data-step-for="fee" data-dir="-1" aria-label="Sänk avgift">−</button>
+              <input type="text" inputmode="numeric" id="fee-input" value="5 879" />
+              <span class="control-unit">kr</span>
+              <button type="button" class="step-btn" data-step-for="fee" data-dir="1" aria-label="Höj avgift">+</button>
+            </div>
+          </div>
+          <input type="range" class="slider" id="fee-slider" min="0" max="25000" step="100" value="5879" />
+          <div class="slider-marks"><span>0</span><span>5k</span><span>10k</span><span>15k</span><span>20k</span><span>25k</span></div>
+          <small class="muted" style="margin-top:0.3rem">Avgift (BRF) eller driftkostnad (villa).</small>
+        </div>
+      </div>
+    </section>
+
+    <!-- INSIGHTS -->
+    <section class="insights-row">
+      <div class="insight-card">
+        <div class="insight-label">Om <strong><span id="ins-horizon">10</span> år</strong> har du amorterat</div>
+        <div class="insight-value" id="ins-amort-total">— kr</div>
+        <div class="insight-sub">på lånet på din bostad.</div>
+      </div>
+      <div class="insight-card" id="ins-tier-drop-card" hidden>
+        <div class="insight-label">Amorteringskravet sjunker om</div>
+        <div class="insight-value" id="ins-tier-drop-years">— år</div>
+        <div class="insight-sub">till 1% enligt nuvarande amortering (utan värdestegring).</div>
+      </div>
+      <div class="insight-card" id="ins-dti-card" hidden>
+        <div class="insight-label">Skuldkvot</div>
+        <div class="insight-value" id="ins-dti">—×</div>
+        <div class="insight-sub" id="ins-dti-extra">—</div>
+      </div>
+    </section>
+
+    <!-- TIER + STRESS TABLES -->
+    <section class="tables-row">
+      <div class="card">
+        <h2>Vad händer om du lägger mer i kontantinsats?</h2>
+        <table class="tier-table">
+          <thead>
+            <tr><th>Kontantinsats</th><th>LTV</th><th>Amortering/mån</th></tr>
+          </thead>
+          <tbody id="tier-table-body"></tbody>
+        </table>
+        <p class="small muted" style="margin-top:0.5rem">Lagkrav: &gt;70% LTV = 2%, 50% &lt; LTV ≤ 70% = 1%, ≤50% = 0%.</p>
+      </div>
+
+      <div class="card">
+        <h2>Stresstest: om räntan stiger</h2>
+        <table class="tier-table">
+          <thead>
+            <tr><th>Ränta</th><th>Månadskostnad</th><th>Efter ränteavdrag</th></tr>
+          </thead>
+          <tbody id="stress-body"></tbody>
+        </table>
+        <p class="small muted" style="margin-top:0.5rem">Behåll samma amortering — bara räntan ändras.</p>
+      </div>
+    </section>
+
+    <!-- BANK RATES -->
+    <section class="card bank-rates">
+      <div class="bank-rates-head">
+        <h2>Jämför banker — aktuella räntor</h2>
+        <div class="bank-rates-meta">
+          <strong>Listränta</strong> = annonserad ränta före rabatt. <strong>Snittränta</strong> = vad bankens kunder i genomsnitt fick under <span id="rates-period">—</span> (FI:s månadsrapportering).
+        </div>
+      </div>
+      <div class="bank-compare-banner" id="bank-compare-banner">
+        <span>
+          <strong id="bank-compare-banner-count">0</strong> banker används i jämförelsen längst ner. Markera kryssrutan i kolumnen <em>Jämför</em> för att lägga till eller ta bort en bank.
+        </span>
+        <span class="bank-compare-banner-actions">
+          <button type="button" id="bank-compare-reset" aria-label="Återställ jämförelsen till standardurvalet (storbanker + SBAB)">Återställ standardurval</button>
+          <button type="button" id="bank-compare-clear" aria-label="Avmarkera alla banker">Avmarkera alla</button>
+        </span>
+      </div>
+      <div class="bank-rates-filters" role="group" aria-label="Filtrera banker efter typ">
+        <span class="filter-label">Visa:</span>
+        <button type="button" class="bank-filter is-active" data-type="storbank">
+          <span class="bank-dot bank-dot--storbank"></span>Storbank
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="niche">
+          <span class="bank-dot bank-dot--niche"></span>Nischbank
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="borgo">
+          <span class="bank-dot bank-dot--borgo"></span>Borgo
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="pb">
+          <span class="bank-dot bank-dot--pb"></span>Private Banking
+        </button>
+        <button type="button" class="bank-filter is-active" data-type="subprime">
+          <span class="bank-dot bank-dot--subprime"></span>Second-tier
+        </button>
+      </div>
+      <div class="bank-rates-scroll">
+        <table class="bank-rates-table">
+          <thead>
+            <tr>
+              <th class="col-compare" aria-label="Jämför">Jämför</th>
+              <th class="sortable" data-sort="name">Bank <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable" data-sort="list3m">Listränta<br>3 mån <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable is-sorted" data-sort="snitt3m">Snittränta<br>3 mån <span class="sort-arrow" aria-hidden="true">▲</span></th>
+              <th>Krav</th>
+              <th class="sortable" data-sort="monthly">Din månadskostnad<br>vid snittränta <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th class="sortable" data-sort="type">Typ <span class="sort-arrow" aria-hidden="true"></span></th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="bank-rates-body">
+            <tr><td colspan="8" class="muted">Laddar räntor…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="small muted" style="margin-top:0.5rem">
+        Senast uppdaterad <span id="bank-rates-updated">—</span> <span id="bank-rates-freshness" class="freshness-tag"></span>. Klicka <em>Räkna med</em> för att applicera räntan på kalkylatorn ovan. Hovra över <em>Krav</em>-cellen för mer detaljer. Räntorna hämtas automatiskt från bankernas egna sidor varje dag.
+      </p>
+
+      <details class="bank-rates-explainer">
+        <summary>Vad betyder kraven? (skuldkvot, KALP, belåningsgrad)</summary>
+        <div class="explainer-body">
+          <h4>Skuldkvot</h4>
+          <p>Totalt bolån ÷ hushållets bruttoårsinkomst. Sedan 2026-04-01 finns inget lagstadgat tak — varje bank sätter sin egen gräns. De flesta lånar max 5–6×, men <strong>Nordea och Handelsbanken har inget formellt tak</strong> (KALP avgör).</p>
+          <h4>KALP (Kvar Att Leva På)</h4>
+          <p>Bankens stresstest: räntan höjs i kalkylen till <strong>6–7%</strong> (Handelsbanken/Nordea/Danske ~6,0%; SBAB/SEB upp till 7%; Swedbank ~6,4%). Konsumentverkets schablonkostnader dras från nettoinkomsten. Ofta KALP, inte skuldkvot, som blir den bindande gränsen.</p>
+          <h4>Belåningsgrad (LTV)</h4>
+          <p>Bolån ÷ bostadens marknadsvärde. Lagtaket är <strong>90%</strong> sedan 2026-04-01 (höjt från 85%). Vissa banker har lägre interna LTV-tak för specifika produkter — Avanza Superbolånet 50–60%, Nordnet PB 50%, Landshypotek 85%.</p>
+          <h4>Borgo-bankerna</h4>
+          <p>Bolån från <strong>Ikano Bank, ICA Banken och Ålandsbanken</strong> ges av <em>Borgo</em> — ett gemensamt hypoteksbolag (ägs även av Söderberg &amp; Partners). Räntorna och villkoren är liknande mellan dessa tre.</p>
+          <h4>Private Banking (Avanza/Nordnet)</h4>
+          <p>Marknadens lägsta räntor (~2,10–2,15%) men kräver stor förmögenhet hos banken: Avanza Superbolånet PB kräver ≥3 Mkr hos Avanza, Nordnet har skalad rabatt upp till ≥70 Mkr för lägsta nivån (1,75%). Max 50–60% belåningsgrad.</p>
+          <h4>Second-tier (Bluestep, Marginalen, Svea)</h4>
+          <p>Riktar sig till kunder som inte fått lån hos storbanker (betalningsanmärkningar, oregelbunden inkomst, egenföretagare). Räntor 5–6%. Ofta första steget mot konsolidering hos storbank.</p>
+        </div>
+
+        <h3 class="explainer-h3">Skuldkvotstak per bank — snabbreferens</h3>
+        <p class="small muted">Bankernas <em>egna</em> regler. Det finns inget lagstadgat tak sedan 2026-04-01.</p>
+        <div class="explainer-scroll">
+          <table class="explainer-table">
+            <thead>
+              <tr><th>Bank</th><th>Internt skuldkvotstak</th><th>Kommentar</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Nordea</td><td><em>Inget formellt</em></td><td>Bedömer betalförmåga helhetligt via KALP.</td></tr>
+              <tr><td>Handelsbanken</td><td><em>Inget formellt</em></td><td>KALP avgör; kalkylränta 6,0%.</td></tr>
+              <tr><td>SBAB</td><td><em>Inget formellt</em></td><td>Transparent LTV-prissättning utan individuell förhandling.</td></tr>
+              <tr><td>Skandiabanken</td><td>~5×</td><td>Riktmärke 500%. Faktisk gräns sätts via KALP.</td></tr>
+              <tr><td>Swedbank</td><td>4,5×</td><td>Bankens generella regel. Kalkylränta ~6,4%.</td></tr>
+              <tr><td>SEB</td><td>~6× (individuellt)</td><td>Kalkylränta 6–7%. Förhandlas per kund.</td></tr>
+              <tr><td>Danske Bank</td><td>~6× (individuellt)</td><td>Kalkylränta 6,0%.</td></tr>
+              <tr><td>Stabelo</td><td>6×</td><td>Transparent prissättning, ingen förhandling.</td></tr>
+              <tr><td>Avanza (PB)</td><td>6×</td><td>Endast Private Banking (≥3 Mkr hos Avanza). Max 50–60% LTV.</td></tr>
+              <tr><td>Nordnet (PB)</td><td><em>Inget formellt</em></td><td>Räntan trappas efter förmögenhet. Max 50% LTV.</td></tr>
+              <tr><td>Landshypotek</td><td><em>Inget formellt</em></td><td>Publicerar 85% LTV-tak (predaterar 2026-04-01-höjningen). Min 750k lån för rabatt.</td></tr>
+              <tr><td>Borgo-bankerna<br>(ICA / Ikano / Ålandsbanken)</td><td><em>Inget formellt</em></td><td>Tre varumärken, ett bolåneprodukt. Standard KALP-bedömning.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="explainer-h3">Var hittar man färska räntor?</h3>
+        <p class="small muted">Bankerna är enligt FI skyldiga att publicera <strong>snitträntor månadsvis</strong>, senast 5 arbetsdagar efter månadsslut. Lättast att hämta från jämförsajter:</p>
+        <ul class="explainer-list">
+          <li><a href="https://www.konsumenternas.se/konsumentstod/jamforelser/lan--betalningar/lan/jamfor-borantor/" target="_blank" rel="noopener noreferrer">Konsumenternas.se</a> — oberoende myndighetstjänst.</li>
+          <li><a href="https://www.compricer.se/borantor/" target="_blank" rel="noopener noreferrer">Compricer.se</a> — uppdateras inom timmar efter en justering.</li>
+          <li><a href="https://finansvalp.se/lana-pengar/bolan/jamfor" target="_blank" rel="noopener noreferrer">Finansvalp.se</a></li>
+          <li><a href="https://www.finansportalen.se/snittrantor/" target="_blank" rel="noopener noreferrer">Finansportalen.se</a></li>
+        </ul>
+      </details>
+    </section>
+
+    <!-- PAYOFF PROJECTION -->
+    <section class="card payoff-section">
+      <div class="payoff-head">
+        <h2>Återbetalningsplan — hur lång tid till skuldfri?</h2>
+        <div class="payoff-controls">
+          <label>Värdestegring/år (%)
+            <input type="number" id="appreciation-input" value="0" step="0.5" min="0" max="20" />
+          </label>
+        </div>
+      </div>
+      <p class="small muted">Amorteringsnivån sjunker automatiskt allt eftersom belåningsgraden faller (&gt;70% = 2%, 50% &lt; LTV ≤ 70% = 1%, ≤50% = 0%, enligt lag 2026:226). Räknas på <em>ursprungligt</em> lån. Skärpta amorteringskravet (+1% vid hög skuldkvot) togs bort 2026-04-01.</p>
+
+      <div class="payoff-stats">
+        <div class="po-stat">
+          <div class="po-stat-label">Når 70% LTV</div>
+          <div class="po-stat-value" id="po-tier-1">— år</div>
+          <div class="po-stat-sub">Amortering går ner till 1%</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Når 50% LTV</div>
+          <div class="po-stat-value" id="po-tier-0">— år</div>
+          <div class="po-stat-sub">Inget amorteringskrav (du kan sluta amortera)</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Fullt avbetalt (om du slutar)</div>
+          <div class="po-stat-value" id="po-paid">— år</div>
+          <div class="po-stat-sub" id="po-paid-sub">Vid 0% amorteringskrav stannar lånet</div>
+        </div>
+        <div class="po-stat">
+          <div class="po-stat-label">Total ränta över 30 år</div>
+          <div class="po-stat-value" id="po-total-interest">— kr</div>
+          <div class="po-stat-sub">Vid nuvarande ränta, lagstadgad amortering</div>
+        </div>
+      </div>
+
+      <div class="payoff-chart-wrap">
+        <canvas id="payoff-chart"></canvas>
+      </div>
+      <p class="small muted" style="margin-top:0.5rem">Blå linje = lagstadgad minimi-amortering (sjunker stegvis). Orange linje = om du fortsätter amortera 2% (frivilligt) tills fullt avbetalt.</p>
+    </section>
+
+    <!-- SECONDARY SETTINGS -->
+    <details class="card secondary">
+      <summary>Fler inställningar (inkomst, källor, tidshorisont)</summary>
+      <div class="secondary-grid">
+        <label>Hushållets bruttoinkomst per år (kr)
+          <input type="number" name="gross_household_income_kr_year" value="600000" min="1" />
+        </label>
+        <label>Tidshorisont (insikter)
+          <select name="horizon_years">
+            <option value="5">5 år</option>
+            <option value="10" selected>10 år</option>
+            <option value="20">20 år</option>
+            <option value="30">30 år</option>
+          </select>
+        </label>
+      </div>
+
+      <h3 class="ins-h3" style="margin-top:1.25rem">Källor till kontantinsats (valfritt)</h3>
+      <p class="small muted">Om kontantinsatsen kommer från flera ställen kan du lista dem här. Annars använder vi reglaget ovan.</p>
+      <div id="hp-rows"></div>
+      <button type="button" id="add-hp" class="ghost">+ Lägg till källa</button>
+    </details>
+
+    <!-- AFFILIATE (hidden until affiliate URLs are configured in src/affiliates.js) -->
+    <section class="card affiliate-card" id="affiliate-card" hidden>
+      <div class="affiliate-head">
+        <h2>Jämför bolåneerbjudanden</h2>
+        <span class="ad-label">Annonslänkar</span>
+      </div>
+      <p class="small muted">En låneförmedlare skickar din ansökan till flera banker samtidigt, så att bankerna konkurrerar om ditt lån. Det är gratis för dig och påverkar inte din kreditvärdighet mer än en enda ansökan. Vi kan få ersättning om du ansöker via länkarna nedan.</p>
+      <div class="affiliate-links" id="affiliate-links"></div>
+    </section>
+
+    <!-- FAQ: indexable explanatory copy; mirrored as FAQPage JSON-LD in <head> -->
+    <section class="card faq" id="faq">
+      <h2>Vanliga frågor om bolån</h2>
+      <details open>
+        <summary>Hur räknar man ut månadskostnaden för ett bolån?</summary>
+        <p>Månadskostnaden är ränta + amortering + månadsavgift eller driftkostnad. Räntan per månad är lånebeloppet × räntesatsen ÷ 12. Därefter dras ränteavdraget av: 30&nbsp;% av räntekostnaden upp till 100&nbsp;000&nbsp;kr per år och 21&nbsp;% på det som överstiger.</p>
+      </details>
+      <details>
+        <summary>Hur mycket kontantinsats behöver jag?</summary>
+        <p>Sedan 1 april 2026 får bolånet vara högst 90&nbsp;% av bostadens värde (bolånetaket). Du behöver alltså minst 10&nbsp;% i kontantinsats, plus pengar till lagfart och eventuella nya pantbrev.</p>
+      </details>
+      <details>
+        <summary>Hur mycket måste jag amortera?</summary>
+        <p>Enligt amorteringskravet amorterar du 2&nbsp;% per år om belåningsgraden är över 70&nbsp;%, 1&nbsp;% mellan 50 och 70&nbsp;%, och inget krav under 50&nbsp;%. Det skärpta kravet för lån över 4,5 gånger inkomsten avskaffades 1 april 2026.</p>
+      </details>
+      <details>
+        <summary>Vad kostar lagfart och pantbrev?</summary>
+        <p>Lagfart kostar 1,5&nbsp;% av köpeskillingen plus 825&nbsp;kr i expeditionsavgift. Nya pantbrev kostar 2&nbsp;% av pantbrevsbeloppet plus 375&nbsp;kr. Bostadsrätter har varken lagfart eller pantbrev; där pantsätts andelen i föreningen i stället.</p>
+      </details>
+      <details>
+        <summary>Vad är skillnaden mellan listränta och snittränta?</summary>
+        <p>Listräntan är bankens annonserade ränta före rabatt. Snitträntan är vad bankens kunder i genomsnitt faktiskt fick förra månaden, och är ofta en bättre utgångspunkt för förhandling. Bankerna är skyldiga att publicera snitträntan varje månad.</p>
+      </details>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Housecalc är ett oberoende verktyg. Beräkningarna är vägledande och ersätter inte bankens kalkyl. All beräkning sker i din webbläsare; inga uppgifter skickas någonstans.</p>
+  </footer>
+
+  <!-- COMPARE drawer — sticky bottom panel: pick banks + prices to compare -->
+  <aside class="compare-drawer" id="compare-drawer" aria-label="Jämför banker och prisnivåer">
+    <div class="compare-drawer-inner">
+      <button type="button" class="compare-drawer-header" id="compare-drawer-toggle" aria-expanded="false" aria-controls="compare-drawer-body">
+        <span class="cdh-title">
+          <span class="cdh-chevron" aria-hidden="true">▲</span>
+          Jämför banker och prisnivåer
+        </span>
+        <span class="cdh-meta">
+          <span class="cdh-count"><span id="compare-count">0</span> alternativ</span>
+          <span class="cdh-state-text" data-when-open="Stäng" data-when-closed="Öppna">Öppna</span>
+        </span>
+      </button>
+      <div class="compare-drawer-body" id="compare-drawer-body" hidden>
+        <!-- Bank selection -->
+        <section class="cd-section">
+          <div class="cd-section-head">
+            <span class="cd-section-title">
+              Banker att jämföra
+              <span class="cd-section-count"><span id="cd-bank-count">0</span> valda</span>
+            </span>
+            <button type="button" class="cd-section-action" id="cd-bank-add">+ Lägg till bank</button>
+          </div>
+          <div class="cd-bank-chips" id="cd-bank-chips"></div>
+          <div class="cd-bank-popover" id="cd-bank-popover" hidden></div>
+        </section>
+
+        <!-- Tenor + rate-type selection -->
+        <section class="cd-section">
+          <div class="cd-section-head">
+            <span class="cd-section-title">Räntehorisont</span>
+            <div class="cd-tenor-pills" id="cd-tenor-pills" role="tablist" aria-label="Räntehorisont"></div>
+          </div>
+          <div class="cd-section-head" style="margin-top:0.4rem">
+            <span class="cd-section-title">Räntetyp</span>
+            <div class="cd-tenor-pills" id="cd-rate-type-pills" role="tablist" aria-label="Räntetyp"></div>
+          </div>
+          <p class="small muted" style="margin:0">
+            <strong>Aktuell</strong> = bankens annonserade ränta idag. <strong>Snitt</strong> = vad kunderna faktiskt fick förra månaden (FI:s rapportering). Saknar banken vald ränta används den andra som fallback.
+          </p>
+        </section>
+
+        <!-- Price rows -->
+        <section class="cd-section">
+          <div class="cd-section-head">
+            <span class="cd-section-title">Prisnivåer</span>
+            <button type="button" class="cd-section-action" id="add-compare">+ Lägg till pris</button>
+          </div>
+          <p class="small muted" style="margin:0 0 0.5rem">
+            Alla rader använder kontantinsats% (<span id="cmp-pct-display">10,0%</span>), amortering och avgift från reglagen ovan. <em>Räkna med</em> applicerar priset på kalkylatorn. Expandera en rad för att se varje banks ränta och månadskostnad.
+          </p>
+          <div class="cd-rows" id="cd-rows"></div>
+        </section>
+      </div>
+    </div>
+  </aside>
+
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

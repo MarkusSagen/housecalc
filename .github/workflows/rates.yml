@@ -1,0 +1,71 @@
+name: Update bank rates
+
+on:
+  schedule:
+    # 05:15 and 13:15 UTC: banks typically move list rates in the morning,
+    # snitträntor land in the first working days of each month.
+    - cron: "15 5,13 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: rates
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - id: rates
+        run: npm run rates
+
+      - name: Configure git
+        if: steps.rates.outputs.changed == 'true'
+        run: |
+          git config user.name "housecalc-rates[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Clean run: commit straight to main, then deploy.
+      - id: publish
+        if: steps.rates.outputs.changed == 'true' && steps.rates.outputs.review == 'false'
+        run: |
+          npm test
+          git add data/rates/se.json
+          git commit -m "chore(rates): automated update $(date -u +%F)"
+          git push origin HEAD:main
+          echo "published=true" >> "$GITHUB_OUTPUT"
+
+      # A guardrail tripped: put the change in a PR for a human to check.
+      # Requires Settings → Actions → "Allow GitHub Actions to create and approve pull requests".
+      - name: Open review PR
+        if: steps.rates.outputs.changed == 'true' && steps.rates.outputs.review == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          branch="rates/review-$(date -u +%F-%H%M)"
+          git switch -c "$branch"
+          git add data/rates/se.json
+          git commit -m "chore(rates): update needing review $(date -u +%F)"
+          git push origin "$branch"
+          gh pr create --base main --head "$branch" \
+            --title "Rates update needs review ($(date -u +%F))" \
+            --body-file rates-report.md
+
+  deploy:
+    needs: update
+    if: needs.update.outputs.published == 'true'
+    uses: ./.github/workflows/deploy.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
