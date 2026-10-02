@@ -1,6 +1,6 @@
 {
   "market": "se",
-  "updated": "2026-09-29",
+  "updated": "2026-10-02",
   "snittranta_period": "augusti 2026",
   "manual_updated": "2026-06-08",
   "manual_period": "april–maj 2026",
@@ -171,7 +171,7 @@
         "details": "Swedbanks generella regel är 4,5× bruttoinkomst per år. KALP-kalkylränta ca 6,4%. Räntan förhandlas individuellt. Fastighetsbyrån (Swedbank-ägd mäklare) hänvisar till Swedbanks räntor."
       },
       "snitt_period": "2026-08",
-      "fetched": "2026-09-29"
+      "fetched": "2026-10-02"
     },
     {
       "name": "Handelsbanken",
@@ -202,7 +202,7 @@
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt via KALP (kalkylränta 6,0%). Räntan förhandlas; rabattnivå beror på belåningsgrad, övriga engagemang hos banken och förhandling."
       },
       "snitt_period": "2026-08",
-      "fetched": "2026-09-29"
+      "fetched": "2026-10-02"
     },
     {
       "name": "SBAB",
@@ -234,7 +234,7 @@
         "details": "Inget formellt skuldkvotstak — KALP avgör. Räntan baseras helt på belåningsgrad utan individuell förhandling. Snitt- och listränta ligger nära varandra (mindre rabattmånd än storbankerna). Extra rabatt för energiklass A/B."
       },
       "snitt_period": "2026-08",
-      "fetched": "2026-09-29"
+      "fetched": "2026-10-02"
     },
     {
       "name": "Länsförsäkringar",
@@ -268,16 +268,8 @@
       "name": "Nordea",
       "source": "https://www.nordea.se/privat/produkter/aktuella-priser-och-rantor.html",
       "type": "storbank",
-      "snitt": {
-        "3m": 2.77,
-        "1y": 3.25,
-        "2y": 3.35,
-        "3y": 3.41,
-        "4y": 3.5,
-        "5y": 3.6,
-        "8y": 3.77
-      },
-      "snitt_period": "2026-08",
+      "snitt": {},
+      "snitt_period": "2026-09",
       "list": {
         "3m": 3.94,
         "1y": 3.69,
@@ -293,7 +285,7 @@
         "short_label": "Inget skuldkvotstak",
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt. KALP-kalkylränta 6,0%. Rabatt baseras på lånets storlek, bostadens värde och övriga bankengagemang (sparande, pension, andra lån)."
       },
-      "fetched": "2026-09-29"
+      "fetched": "2026-10-02"
     },
     {
       "name": "Ikano Bank",
