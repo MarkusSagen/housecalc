@@ -148,7 +148,18 @@
           <div class="slider-marks"><span>0%</span><span>1%</span><span>2%</span><span>3%</span><span>4%</span><span>5%</span></div>
         </div>
 
-        <div class="control control-row-input">
+        <div class="control">
+          <div class="control-head">
+            <span class="control-label" id="tenure-label">Upplåtelseform</span>
+          </div>
+          <div class="segmented" role="radiogroup" aria-labelledby="tenure-label">
+            <label><input type="radio" name="tenure" value="aganderatt" checked /> Äganderätt (villa, radhus, fritidshus)</label>
+            <label><input type="radio" name="tenure" value="bostadsratt" /> Bostadsrätt</label>
+          </div>
+          <small class="muted" id="tenure-note" style="margin-top:0.3rem">Äganderätt betalar lagfart och eventuella nya pantbrev.</small>
+        </div>
+
+        <div class="control control-row-input" id="pantbrev-control">
           <div class="control-head">
             <label for="existing-pantbrev-input">Befintliga pantbrev</label>
             <div class="control-value">

@@ -61,8 +61,8 @@ const periods = [...fetched.values()].map((r) => r.snittPeriod).filter(Boolean) 
 if (periods.length) {
   const counts = new Map<string, number>();
   for (const p of periods) counts.set(p, (counts.get(p) ?? 0) + 1);
-  const top = [...counts].sort((a, b) => b[1] - a[1])[0][0];
-  data.snittranta_period = formatPeriodSv(top);
+  const top = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
+  if (top) data.snittranta_period = formatPeriodSv(top);
 }
 
 // Only bump `updated` when a rate actually changed; `fetched` stamps alone

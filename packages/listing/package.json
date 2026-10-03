@@ -1,0 +1,9 @@
+{
+  "name": "@housecalc/listing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Pure extractors that read a Swedish property listing from a DOM Document.",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@housecalc/core": "*" }
+}

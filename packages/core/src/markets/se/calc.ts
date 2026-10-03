@@ -52,19 +52,21 @@ export function recommendedAmortPct(ltvPct: number): number {
 
 /**
  * One-time costs + monthly costs for a purchase scenario.
- * `params` = { hpPct, existingPantbrev, rate, amort, monthlyFee }.
+ * `params` = { hpPct, existingPantbrev, rate, amort, monthlyFee, tenure? }.
  */
 export function computeForPrice(price: number, params: PurchaseParams): PurchaseResult {
-  const { hpPct, existingPantbrev, rate, amort, monthlyFee } = params;
+  const { hpPct, existingPantbrev, rate, amort, monthlyFee, tenure = "aganderatt" } = params;
   const hpTotal = Math.round((price * hpPct) / 100);
   const loan = Math.max(0, price - hpTotal);
   const ltv = price > 0 ? (loan / price) * 100 : 0;
 
+  // A bostadsrätt is pledged via the association: no title, no mortgage deeds.
+  const registersTitle = tenure !== "bostadsratt";
   const lagfart =
-    price > 0 ? Math.round(STAMP_DUTY_RATE * price) + LAGFART_FEE_KR : 0;
+    registersTitle && price > 0 ? Math.round(STAMP_DUTY_RATE * price) + LAGFART_FEE_KR : 0;
   const newPantbrev = Math.max(0, loan - existingPantbrev);
   const pantbrev =
-    newPantbrev > 0
+    registersTitle && newPantbrev > 0
       ? Math.round(PANTBREV_RATE * newPantbrev) + PANTBREV_FEE_KR
       : 0;
   const onetimeTotal = hpTotal + lagfart + pantbrev;
