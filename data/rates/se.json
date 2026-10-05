@@ -1,7 +1,7 @@
 {
   "market": "se",
-  "updated": "2026-10-03",
-  "snittranta_period": "augusti 2026",
+  "updated": "2026-10-05",
+  "snittranta_period": "september 2026",
   "manual_updated": "2026-06-08",
   "manual_period": "april–maj 2026",
   "note": "Listränta = annonserad ränta före rabatt. Snittränta = vad bankens kunder i genomsnitt fick under perioden (Finansinspektionens månadsrapportering, publiceras 5 arbetsdagar efter månadsslut). Banker som publicerat senare data kan ha sitt eget `snitt_period`-fält. Skuldkvotstak (DTI cap) är en intern bankregel — det finns inget lagstadgat tak sedan skärpta amorteringskravet togs bort 2026-04-01. Källor: respektive banks officiella sida (länkad per rad), kompletterat med compricer.se/borantor/.",
@@ -141,16 +141,16 @@
       "source": "https://www.swedbank.se/privat/boende-och-bolan/bolanerantor.html",
       "type": "storbank",
       "snitt": {
-        "3m": 2.7,
-        "1y": 2.92,
-        "2y": 3.16,
-        "3y": 3.11,
-        "4y": 3.38,
-        "5y": 3.45,
-        "6y": 3.65,
-        "7y": 3.74,
-        "8y": 3.78,
-        "10y": 3.82
+        "3m": 2.69,
+        "1y": 3.04,
+        "2y": 3.41,
+        "3y": 3.25,
+        "4y": 3.62,
+        "5y": 3.69,
+        "6y": 3.82,
+        "7y": 3.67,
+        "8y": 3.66,
+        "10y": 3.92
       },
       "list": {
         "3m": 3.89,
@@ -170,8 +170,8 @@
         "short_label": "Skuldkvot ca 4,5×",
         "details": "Swedbanks generella regel är 4,5× bruttoinkomst per år. KALP-kalkylränta ca 6,4%. Räntan förhandlas individuellt. Fastighetsbyrån (Swedbank-ägd mäklare) hänvisar till Swedbanks räntor."
       },
-      "snitt_period": "2026-08",
-      "fetched": "2026-10-03"
+      "snitt_period": "2026-09",
+      "fetched": "2026-10-05"
     },
     {
       "name": "Handelsbanken",
@@ -202,20 +202,21 @@
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt via KALP (kalkylränta 6,0%). Räntan förhandlas; rabattnivå beror på belåningsgrad, övriga engagemang hos banken och förhandling."
       },
       "snitt_period": "2026-08",
-      "fetched": "2026-10-03"
+      "fetched": "2026-10-05"
     },
     {
       "name": "SBAB",
       "source": "https://www.sbab.se/1/privat/vara_rantor.html",
       "type": "niche",
       "snitt": {
-        "3m": 2.75,
-        "1y": 3.06,
-        "2y": 3.22,
-        "3y": 3.37,
-        "4y": 3.49,
-        "5y": 3.6,
-        "7y": 3.63
+        "3m": 2.73,
+        "1y": 3.2,
+        "2y": 3.38,
+        "3y": 3.54,
+        "4y": 3.67,
+        "5y": 3.73,
+        "7y": 3.9,
+        "10y": 4.28
       },
       "list": {
         "3m": 3.15,
@@ -233,8 +234,8 @@
         "short_label": "Transparent (LTV)",
         "details": "Inget formellt skuldkvotstak — KALP avgör. Räntan baseras helt på belåningsgrad utan individuell förhandling. Snitt- och listränta ligger nära varandra (mindre rabattmånd än storbankerna). Extra rabatt för energiklass A/B."
       },
-      "snitt_period": "2026-08",
-      "fetched": "2026-10-03"
+      "snitt_period": "2026-09",
+      "fetched": "2026-10-05"
     },
     {
       "name": "Länsförsäkringar",
@@ -293,7 +294,7 @@
         "short_label": "Inget skuldkvotstak",
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt. KALP-kalkylränta 6,0%. Rabatt baseras på lånets storlek, bostadens värde och övriga bankengagemang (sparande, pension, andra lån)."
       },
-      "fetched": "2026-10-03"
+      "fetched": "2026-10-05"
     },
     {
       "name": "Ikano Bank",
