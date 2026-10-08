@@ -16,3 +16,22 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
+
+  extension:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/extension
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+        working-directory: .
+      - run: npx tsc -p tsconfig.json
+      - run: npm run build
+      - name: Lint Firefox build (AMO rules)
+        run: npx --yes web-ext@8 lint -s .output/firefox-mv3 --warnings-as-errors
+      - run: npx playwright install --with-deps chromium
+      - name: End-to-end popup test in Chromium
+        run: xvfb-run -a npm run e2e
