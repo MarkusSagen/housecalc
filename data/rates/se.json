@@ -1,6 +1,6 @@
 {
   "market": "se",
-  "updated": "2026-10-05",
+  "updated": "2026-10-08",
   "snittranta_period": "september 2026",
   "manual_updated": "2026-06-08",
   "manual_period": "april–maj 2026",
@@ -171,19 +171,19 @@
         "details": "Swedbanks generella regel är 4,5× bruttoinkomst per år. KALP-kalkylränta ca 6,4%. Räntan förhandlas individuellt. Fastighetsbyrån (Swedbank-ägd mäklare) hänvisar till Swedbanks räntor."
       },
       "snitt_period": "2026-09",
-      "fetched": "2026-10-05"
+      "fetched": "2026-10-08"
     },
     {
       "name": "Handelsbanken",
       "source": "https://www.handelsbanken.se/sv/privat/bolan/bolanerantor",
       "type": "storbank",
       "snitt": {
-        "3m": 2.72,
-        "1y": 3.22,
-        "2y": 3.39,
-        "3y": 3.49,
-        "5y": 3.67,
-        "8y": 3.93,
+        "3m": 2.7,
+        "1y": 3.12,
+        "2y": 3.48,
+        "3y": 3.44,
+        "5y": 3.81,
+        "8y": 4.04,
         "10y": 4.12
       },
       "list": {
@@ -201,8 +201,8 @@
         "short_label": "Inget skuldkvotstak",
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt via KALP (kalkylränta 6,0%). Räntan förhandlas; rabattnivå beror på belåningsgrad, övriga engagemang hos banken och förhandling."
       },
-      "snitt_period": "2026-08",
-      "fetched": "2026-10-05"
+      "snitt_period": "2026-09",
+      "fetched": "2026-10-08"
     },
     {
       "name": "SBAB",
@@ -235,7 +235,7 @@
         "details": "Inget formellt skuldkvotstak — KALP avgör. Räntan baseras helt på belåningsgrad utan individuell förhandling. Snitt- och listränta ligger nära varandra (mindre rabattmånd än storbankerna). Extra rabatt för energiklass A/B."
       },
       "snitt_period": "2026-09",
-      "fetched": "2026-10-05"
+      "fetched": "2026-10-08"
     },
     {
       "name": "Länsförsäkringar",
@@ -294,7 +294,7 @@
         "short_label": "Inget skuldkvotstak",
         "details": "Inget formellt skuldkvotstak — bedömer betalförmåga helhetligt. KALP-kalkylränta 6,0%. Rabatt baseras på lånets storlek, bostadens värde och övriga bankengagemang (sparande, pension, andra lån)."
       },
-      "fetched": "2026-10-05"
+      "fetched": "2026-10-08"
     },
     {
       "name": "Ikano Bank",
