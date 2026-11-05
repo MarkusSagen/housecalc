@@ -37,7 +37,7 @@ export function validateBank(bank: string, next: FetchedRates, prev: BankRates |
   if (!next.snittPeriod) {
     issues.push({ bank, level: "warn", message: "snitt period not found on page" });
   } else {
-    const [y, m] = next.snittPeriod.split("-").map(Number);
+    const [y = 0, m = 0] = next.snittPeriod.split("-").map(Number);
     const endOfPeriod = Date.UTC(y, m, 0); // day 0 of next month = last day of this one
     const ageDays = (today.getTime() - endOfPeriod) / 86_400_000;
     if (ageDays > MAX_SNITT_AGE_DAYS)

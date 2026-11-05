@@ -19,6 +19,7 @@
   "devDependencies": {
     "@types/node": "^24.19.0",
     "cheerio": "^1.2.0",
+    "linkedom": "^0.18.13",
     "typescript": "^5.9.0"
   }
 }

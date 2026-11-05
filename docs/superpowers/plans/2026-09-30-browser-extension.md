@@ -6,6 +6,11 @@ that home really costs per month and how much cash you need, based on the data
 on the page you have open. Every value can be edited, and one click opens the
 full calculator.
 
+Status: M0–M2 done (see `apps/extension/README.md`). Correction made during
+M0: one-time costs depend on **upplåtelseform** (tenure), not on building
+type, so the core takes `tenure` and the deep-link parameter is
+`upplatelse=`, not `typ=`.
+
 Builds on `docs/superpowers/specs/2026-09-29-productionize-design.md`
 (the site research and policy constraints are listed there).
 

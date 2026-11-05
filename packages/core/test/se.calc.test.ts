@@ -188,7 +188,7 @@ test("projectPayoff: appreciation accelerates the tier drops", () => {
 
 test("projectPayoff: zero loan returns immediately-paid-off projections", () => {
   const proj = projectPayoff(0, 8_500_000, 3.0, 0, 10);
-  assert.equal(proj.fiSeries[0].remaining, 0);
+  assert.equal(proj.fiSeries[0]?.remaining, 0);
   // yearPaidOffFi is only set when remainingFi reaches <= 0 INSIDE the loop, so
   // for an already-zero start it stays null. That's a known edge.
   assert.equal(proj.yearTier0, 1); // LTV is 0 from year 1
@@ -199,4 +199,33 @@ test("projectPayoff: totalInterestFi30 is positive and grows with rate", () => {
   const r5 = projectPayoff(7_650_000, 8_500_000, 5.0, 0, 50);
   assert.ok(r3.totalInterestFi30 > 0);
   assert.ok(r5.totalInterestFi30 > r3.totalInterestFi30);
+});
+
+// =============================================================================
+// tenure (upplåtelseform)
+// =============================================================================
+
+const TENURE_BASE = { hpPct: 15, existingPantbrev: 0, rate: 3, amort: 2, monthlyFee: 4_000 };
+
+test("tenure: äganderätt (default) pays lagfart and pantbrev", () => {
+  const r = computeForPrice(3_000_000, TENURE_BASE);
+  assert.equal(r.lagfart, 45_000 + 825);
+  assert.equal(r.pantbrev, Math.round(0.02 * 2_550_000) + 375);
+  assert.deepEqual(computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "aganderatt" }), r);
+});
+
+test("tenure: tomträtt registers like äganderätt", () => {
+  const r = computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "tomtratt" });
+  assert.equal(r.lagfart, 45_825);
+  assert.ok(r.pantbrev > 0);
+});
+
+test("tenure: bostadsrätt has no lagfart or pantbrev; monthly costs unchanged", () => {
+  const house = computeForPrice(3_000_000, TENURE_BASE);
+  const br = computeForPrice(3_000_000, { ...TENURE_BASE, tenure: "bostadsratt" });
+  assert.equal(br.lagfart, 0);
+  assert.equal(br.pantbrev, 0);
+  assert.equal(br.onetimeTotal, br.hpTotal);
+  assert.equal(br.monthlyTotal, house.monthlyTotal);
+  assert.equal(br.monthlyAfterTax, house.monthlyAfterTax);
 });

@@ -29,6 +29,12 @@ Rates are baked into the bundle at build time.
 - `apps/web/` is the Vite static site: `index.html` (markup, SEO head, FAQ),
   `src/main.js` (UI) and `src/affiliates.js` (loan-broker slot, hidden until
   its URLs are configured).
+- `packages/listing/` reads a listing (price, avgift, drift, upplåtelseform,
+  pantbrev) from a page's DOM. It has site adapters plus generic JSON-LD and
+  label-text passes.
+- `apps/extension/` is the Chrome + Firefox extension (WXT, MV3): click on a
+  listing to see what it costs. See `apps/extension/README.md` for how to load
+  it and for the QA checklist.
 - `data/rates/se.json` is the source of truth for bank rates.
 - `scripts/rates/` has the fetch → validate → write pipeline. There is one
   module per bank in `sources/`, plus the guardrails in `validate.ts`.

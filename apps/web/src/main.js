@@ -108,6 +108,29 @@ attachThousandFormatter(feeInput);
 
 // ===== Read params from DOM =====
 
+function readTenure() {
+  return document.querySelector('input[name="tenure"]:checked')?.value ?? "aganderatt";
+}
+
+function setTenure(value) {
+  const input = document.querySelector(`input[name="tenure"][value="${value}"]`);
+  if (input) input.checked = true;
+}
+
+// Bostadsrätt has no lagfart/pantbrev, so hide the inputs and rows that only
+// apply to äganderätt instead of showing a row of zeros.
+function renderTenure(tenure) {
+  const br = tenure === "bostadsratt";
+  $("#pantbrev-control").hidden = br;
+  ["#hc-lagfart", "#hc-pantbrev", "#hcf-lagfart", "#hcf-pantbrev"].forEach((sel) => {
+    const row = $(sel)?.parentElement;
+    if (row) row.hidden = br;
+  });
+  $("#tenure-note").textContent = br
+    ? "Bostadsrätt: ingen lagfart eller pantbrev. Banken tar pant i andelen i föreningen."
+    : "Äganderätt betalar lagfart och eventuella nya pantbrev.";
+}
+
 function readPrimaryParams() {
   const price = parseDigits(priceInput.value);
   const hpFromSources = readHandpenningSources().reduce(
@@ -120,6 +143,7 @@ function readPrimaryParams() {
     price,
     hpTotal,
     hpPct,
+    tenure: readTenure(),
     existingPantbrev: parseDigits(existingPantbrevInput.value),
     rate: parseFloat(rateInput.value || "0"),
     amort: parseFloat(amortInput.value || "0"),
@@ -166,6 +190,7 @@ function renderLiveSummary() {
   const p = readPrimaryParams();
   const r = computeForPrice(p.price, p);
   const dti = p.grossIncome > 0 ? r.loan / p.grossIncome : 0;
+  renderTenure(p.tenure);
 
   $("#hero-monthly").textContent = fmtMon(r.monthlyTotal);
   $("#hero-monthly-after").textContent = fmtMon(r.monthlyAfterTax);
@@ -995,6 +1020,7 @@ $$(".rate-preset").forEach((btn) => {
   });
 });
 
+$$('input[name="tenure"]').forEach((el) => el.addEventListener("change", renderLiveSummary));
 [existingPantbrevInput, appreciationInput].forEach((el) =>
   el.addEventListener("input", renderLiveSummary),
 );
@@ -1423,7 +1449,8 @@ async function exportXlsx() {
   addRow("Ränta", p.rate / 100, PCT2);
   addRow("Amortering", p.amort / 100, PCT1);
   addRow("Avgift / drift", r.monthlyFee, KRM);
-  addRow("Befintliga pantbrev", p.existingPantbrev, KR);
+  addRow("Upplåtelseform", p.tenure === "bostadsratt" ? "Bostadsrätt" : "Äganderätt", null);
+  if (p.tenure !== "bostadsratt") addRow("Befintliga pantbrev", p.existingPantbrev, KR);
   addRow("Bolån", r.loan, KR);
   addRow("LTV", r.ltv / 100, PCT1);
   blank();
@@ -1437,8 +1464,10 @@ async function exportXlsx() {
 
   addSection("DU BEHÖVER I KONTANTER");
   addRow("Kontantinsats", r.hpTotal, KR);
-  addRow("+ Lagfart (1,5 %)", r.lagfart, KR);
-  addRow("+ Pantbrev (2 % av nya)", r.pantbrev, KR);
+  if (p.tenure !== "bostadsratt") {
+    addRow("+ Lagfart (1,5 %)", r.lagfart, KR);
+    addRow("+ Pantbrev (2 % av nya)", r.pantbrev, KR);
+  }
   addRow("Summa kontanter", r.onetimeTotal, KR, { labelBold: true, valueBold: true });
 
   // Blank spacer row at the bottom-left for a little margin. An empty string in
@@ -1468,7 +1497,8 @@ async function exportXlsx() {
 $("#export-xlsx").addEventListener("click", exportXlsx);
 
 // Prefill from the query string so listing pages (and the browser extension)
-// can deep-link a scenario: ?pris=3195000&avgift=4788&kontant=15&ranta=2.9
+// can deep-link a scenario:
+// ?pris=3195000&avgift=4788&kontant=15&ranta=2.9&upplatelse=bostadsratt
 function applyUrlParams() {
   const q = new URLSearchParams(location.search);
   const num = (k) => {
@@ -1489,6 +1519,11 @@ function applyUrlParams() {
   if (hpPct !== null) hpSlider.value = Math.min(+hpSlider.max, hpPct);
   const rate = num("ranta");
   if (rate !== null) setPair(rateInput, rateSlider, rate, rate.toFixed(2));
+  const tenure = q.get("upplatelse");
+  if (tenure === "aganderatt" || tenure === "bostadsratt" || tenure === "tomtratt") {
+    // The UI groups tomträtt with äganderätt: same one-time costs.
+    setTenure(tenure === "tomtratt" ? "aganderatt" : tenure);
+  }
   const pantbrev = num("pantbrev");
   if (pantbrev !== null) existingPantbrevInput.value = fmtThousands(pantbrev);
 }
