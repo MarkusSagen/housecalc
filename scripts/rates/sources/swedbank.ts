@@ -21,6 +21,6 @@ export const swedbank: RateSource = {
       setRate(snitt, cells[0], cells[snittCol]);
       setRate(list, cells[0], cells[listCol]);
     });
-    return { list, snitt, snittPeriod: parsePeriod(headers[snittCol]) };
+    return { list, snitt, snittPeriod: parsePeriod(headers[snittCol] ?? "") };
   },
 };

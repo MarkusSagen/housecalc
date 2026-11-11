@@ -48,7 +48,7 @@ export function parseTenor(label: string): Tenor | null {
     s.match(/p_(\d+)_(months?|years?)/);
   if (!m) return null;
   const n = Number(m[1]);
-  const unit = /^(mån|month)/.test(m[2]) ? "m" : "y";
+  const unit = /^(mån|month)/.test(m[2] ?? "") ? "m" : "y";
   const t = `${n}${unit}` as Tenor;
   return TENORS.includes(t) ? t : null;
 }
@@ -73,7 +73,7 @@ export function parsePeriod(text: string): string | undefined {
   let m = s.match(/(20\d{2})-?(0[1-9]|1[0-2])/);
   if (m) return `${m[1]}-${m[2]}`;
   m = s.match(new RegExp(`(${MONTHS_SV.join("|")})\\s+(20\\d{2})`));
-  if (m) return `${m[2]}-${String(MONTHS_SV.indexOf(m[1]) + 1).padStart(2, "0")}`;
+  if (m?.[1]) return `${m[2]}-${String(MONTHS_SV.indexOf(m[1]) + 1).padStart(2, "0")}`;
   return undefined;
 }
 
@@ -83,8 +83,8 @@ export function formatPeriodSv(period: string): string {
   return `${MONTHS_SV[Number(mo) - 1]} ${y}`;
 }
 
-export function setRate(target: TenorRates, tenorLabel: string, value: string | number | null | undefined) {
-  const t = parseTenor(tenorLabel);
+export function setRate(target: TenorRates, tenorLabel: string | undefined, value: string | number | null | undefined) {
+  const t = tenorLabel ? parseTenor(tenorLabel) : null;
   const v = parsePct(value);
   if (t && v !== null) target[t] = v;
 }

@@ -22,6 +22,7 @@ export async function fetchScbAverage3m(): Promise<{ period: string; rate: numbe
   if (!res.ok) throw new Error(`SCB → HTTP ${res.status}`);
   const json = (await res.json()) as { data: { key: string[]; values: string[] }[] };
   const row = json.data[0];
+  if (!row?.key[4] || !row.values[0]) throw new Error("SCB: empty response");
   const [y, m] = row.key[4].split("M");
   return { period: `${y}-${m}`, rate: Number(row.values[0]) };
 }
